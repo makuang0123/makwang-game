@@ -94,9 +94,11 @@ CUSTOM_CSS = """
         font-size: 0.8rem;
         border: 1px solid #cbd5e1;
     }
+    
+    /* 5x5 群島樣式座位卡 */
     .island-card {
         border-radius: 12px;
-        padding: 10px 4px;
+        padding: 8px 4px;
         text-align: center;
         margin: 4px 0;
         font-size: 0.85rem;
@@ -112,6 +114,22 @@ CUSTOM_CSS = """
         border: 2px solid #075985;
         color: #ffffff;
     }
+    
+    /* 搶位院所名稱高亮醒目標籤 */
+    .taken-clinic-badge {
+        background: rgba(254, 240, 138, 0.25);
+        color: #fef08a;
+        font-size: 1.15rem;
+        font-weight: 900;
+        padding: 3px 6px;
+        border-radius: 6px;
+        border: 1.5px solid #fde047;
+        margin: 4px 0;
+        display: block;
+        letter-spacing: 1px;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    }
+
     .stButton>button {
         width: 100%;
         border-radius: 12px;
@@ -1032,24 +1050,7 @@ ALL_EMPLOYEES = {
 "ZZH02850":("彰化院","0830","醫師"),
 "ZZH02862":("彰化院","0618","醫師"),
 "ZZH02863":("彰化院","1108","儲備診助人員"),
-"ZZH02877":("彰化院","1202","儲備診助人員"),
-"DTT01983":("台東院","0626","護理人員"),
-"DTT02055":("台東院","0501","醫師"),
-"DTT02078":("台東院","0810","區會計"),
-"DTT02256":("台東院","0208","診助人員"),
-"DTT02280":("台東院","1024","醫師"),
-"DTT02317":("台東院","0902","護理人員"),
-"DTT02325":("台東院","0929","診助人員"),
-"DTT02475":("台東院","1105","診助人員"),
-"DTT02487":("台東院","0823","診助人員"),
-"DTT02520":("台東院","0502","診助人員"),
-"DTT02569":("台東院","0309","診助人員"),
-"DTT02681":("台東院","0610","診助人員"),
-"DTT02702":("台東院","0909","診助人員"),
-"DTT02726":("台東院","0814","CRM專員"),
-"DTT02734":("台東院","0312","兼職診助人員"),
-"DTT02806":("台東院","1019","CRM實習專員"),
-"DTT02871":("台東院","1022","儲備診助人員")
+"ZZH02877":("彰化院","1202","儲備診助人員")
 }
 
 CLINIC_TARGETS = {
@@ -1342,7 +1343,7 @@ def render_island_grid():
                     st.markdown(f"""
                     <div class="island-card island-taken">
                         <div>🚩 <b>{island['name']}</b></div>
-                        <div style="font-size:0.75rem; margin-top:2px;">{island['taken_by']}</div>
+                        <span class="taken-clinic-badge">{island['taken_by']}</span>
                         <div style="font-size:0.7rem; opacity:0.85;">({code} 已鎖定)</div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1367,7 +1368,6 @@ def render_quiz_engine():
         st.markdown("### ⛵ 登船啟航認證")
         
         emp_id_raw = st.text_input("1. 請輸入員工編號 (例: MK12345)", key="login_emp_input")
-        # 清除前後空白、全形轉半形並轉大寫
         emp_id_input = emp_id_raw.strip().upper() if emp_id_raw else ""
         
         detected_clinic = ""
