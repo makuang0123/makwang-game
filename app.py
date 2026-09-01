@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import math
+import time
 
 # ==========================================
 # 0. 頁面配置與藍白渡假風 CSS
@@ -27,7 +28,7 @@ CUSTOM_CSS = """
         text-align: center;
         box-shadow: 0 12px 25px -5px rgba(2, 132, 199, 0.35);
         border: 2px solid #e0f2fe;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
     .banner-title {
         font-size: 2.1rem;
@@ -47,6 +48,35 @@ CUSTOM_CSS = """
         margin-top: 8px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
+    
+    /* 即時戰況跑馬燈 */
+    .live-broadcast-ticker {
+        background: linear-gradient(90deg, #eff6ff 0%, #ffffff 50%, #eff6ff 100%);
+        border: 2px solid #38bdf8;
+        border-radius: 12px;
+        padding: 10px 16px;
+        margin-bottom: 18px;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ticker-tag {
+        background: #0284c7;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 900;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
     .empty-state-box {
         background: #ffffff;
         border-radius: 14px;
@@ -114,8 +144,6 @@ CUSTOM_CSS = """
         border: 2px solid #075985;
         color: #ffffff;
     }
-    
-    /* 搶位院所名稱高亮醒目標籤 */
     .taken-clinic-badge {
         background: rgba(254, 240, 138, 0.25);
         color: #fef08a;
@@ -150,7 +178,7 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 876 位全體同仁原始資料庫 (無省略・無解碼・保證秒查)
+# 1. 876 位全體同仁原始資料庫
 # ==========================================
 ALL_EMPLOYEES = {
 "CEO00002":("管理處","0101","醫師"),
@@ -1062,106 +1090,57 @@ CLINIC_TARGETS = {
     '橋頭院': 18, '崇德院': 18, '成功院': 16, '專案成員': 15, '新加坡': 4
 }
 
-def init_database():
-    if "clinics" not in st.session_state:
-        st.session_state.clinics = {}
-        for idx, (c_name, count) in enumerate(CLINIC_TARGETS.items(), start=1):
-            cid = f"C{idx:02d}"
-            st.session_state.clinics[c_name] = {
-                "id": cid,
-                "name": c_name,
-                "target": int(count),
-                "completed_count": 0,
-                "qualified_at": None,
-                "selected_island": None
-            }
-
-    if "islands" not in st.session_state:
-        st.session_state.islands = {}
-        island_themes = [
-            "蔚藍島", "晨曦島", "椰影島", "珊瑚島", "微風島",
-            "晴空島", "海鷗島", "海星島", "珍珠島", "沐光島",
-            "碧波島", "逐浪島", "金沙島", "揚帆島", "晨光島",
-            "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
-            "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
-        ]
-        idx = 0
-        for r in range(1, 6):
-            for c in range(1, 6):
-                code = f"R{r}-{c}"
-                name = island_themes[idx]
-                st.session_state.islands[code] = {
-                    "code": code,
-                    "name": name,
-                    "row": r,
-                    "col": c,
-                    "status": "available",
-                    "taken_by": None
-                }
-                idx += 1
-
-    if "questions" not in st.session_state:
-        st.session_state.questions = {
-            "family_day": [
-                {
-                    "id": "F01",
-                    "q": "⛵ 2026 馬光家庭日的主軸名稱為何？",
-                    "options": ["A. 光芒萬丈", "B. 沐光與航", "C. 同心協力", "D. 乘風破浪"],
-                    "ans": 1,
-                    "exp": "今年主題為『沐光與航』，象徵大家如艦隊般齊心出航！"
-                },
-                {
-                    "id": "F02",
-                    "q": "🏝️ 2026/11/01(日) 馬光家庭日的舉辦地點在哪裡？",
-                    "options": ["A. 高雄流行音樂中心", "B. 高雄巨蛋", "C. 高雄展覽館南館＋室外草坪", "D. 駁二特區"],
-                    "ans": 2,
-                    "exp": "活動包下高雄展覽館南館渡假室內區與海景草坪！"
-                }
-            ],
-            "ma_kwang": [
-                {
-                    "id": "M01",
-                    "q": "⚓ 馬光醫療體系的核心理念不包含下列何者？",
-                    "options": ["A. 專業誠信", "B. 視病猶親", "C. 利潤至上", "D. 團隊協作"],
-                    "ans": 2,
-                    "exp": "馬光始終以同仁與患者的幸福健康為最高準則。"
-                },
-                {
-                    "id": "M02",
-                    "q": "🏥 馬光中醫首創推動的『一人一診室』主要目的是？",
-                    "options": ["A. 增加裝潢費用", "B. 守護隱私與維持極致問診品質", "C. 醫師休息室", "D. 放置更多儀器"],
-                    "ans": 1,
-                    "exp": "提供患者安心放鬆且完全獨立的問診環境！"
-                }
-            ],
-            "policy": [
-                {
-                    "id": "P01",
-                    "q": "📑 依最新通報指引，同仁若遇異常事件應於多久內登錄系統？",
-                    "options": ["A. 24小時內", "B. 3天內", "C. 一週內", "D. 月底結算"],
-                    "ans": 0,
-                    "exp": "24小時內通報能讓跨部門及時提供後援支援！"
-                },
-                {
-                    "id": "P02",
-                    "q": "🎓 關於同仁外部進修補助政策，常規每年度可申請幾次補助？",
-                    "options": ["A. 1次", "B. 2次", "C. 3次", "D. 原則每年2次，專案另計"],
-                    "ans": 3,
-                    "exp": "鼓勵同仁自主進修，每年常規提供 2 次額度支援。"
-                }
-            ]
+# ==========================================
+# 2. 全域持久化狀態 (跨使用者即時廣播)
+# ==========================================
+@st.cache_resource
+def get_global_game_state():
+    clinics = {}
+    for idx, (c_name, count) in enumerate(CLINIC_TARGETS.items(), start=1):
+        cid = f"C{idx:02d}"
+        clinics[c_name] = {
+            "id": cid,
+            "name": c_name,
+            "target": int(count),
+            "completed_count": 0,
+            "qualified_at": None,
+            "selected_island": None
         }
 
-    if "completed_employees" not in st.session_state:
-        st.session_state.completed_employees = set()
+    islands = {}
+    island_themes = [
+        "蔚藍島", "晨曦島", "椰影島", "珊瑚島", "微風島",
+        "晴空島", "海鷗島", "海星島", "珍珠島", "沐光島",
+        "碧波島", "逐浪島", "金沙島", "揚帆島", "晨光島",
+        "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
+        "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
+    ]
+    idx = 0
+    for r in range(1, 6):
+        for c in range(1, 6):
+            code = f"R{r}-{c}"
+            name = island_themes[idx]
+            islands[code] = {
+                "code": code,
+                "name": name,
+                "row": r,
+                "col": c,
+                "status": "available",
+                "taken_by": None
+            }
+            idx += 1
 
-init_database()
+    return {
+        "clinics": clinics,
+        "islands": islands,
+        "completed_employees": set(),
+        "latest_news": "⛵ 全院艦隊整裝待發中！搶位戰即刻開打！"
+    }
 
-# ==========================================
-# 2. 業務核心邏輯
-# ==========================================
+GLOBAL_STATE = get_global_game_state()
+
 def get_clinic_stats(clinic_name):
-    c = st.session_state.clinics.get(clinic_name, {"id": "C00", "name": clinic_name, "target": 30, "completed_count": 0, "qualified_at": None, "selected_island": None})
+    c = GLOBAL_STATE["clinics"].get(clinic_name, {"id": "C00", "name": clinic_name, "target": 30, "completed_count": 0, "qualified_at": None, "selected_island": None})
     target = c["target"]
     completed = c["completed_count"]
     rate = (completed / target) * 100 if target > 0 else 0
@@ -1182,30 +1161,33 @@ def get_clinic_stats(clinic_name):
     }
 
 def get_ranked_active_stats():
-    all_stats = [get_clinic_stats(c_name) for c_name in st.session_state.clinics]
+    all_stats = [get_clinic_stats(c_name) for c_name in GLOBAL_STATE["clinics"]]
     active_stats = [s for s in all_stats if s["completed"] > 0]
     qualified = sorted([s for s in active_stats if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
     unqualified = sorted([s for s in active_stats if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
     return qualified + unqualified
 
 def record_user_completion(employee_id, clinic_name):
-    if employee_id in st.session_state.completed_employees:
+    if employee_id in GLOBAL_STATE["completed_employees"]:
         return False, "您先前已經通關，戰力已計入！"
     
-    st.session_state.completed_employees.add(employee_id)
-    if clinic_name in st.session_state.clinics:
-        clinic = st.session_state.clinics[clinic_name]
+    GLOBAL_STATE["completed_employees"].add(employee_id)
+    if clinic_name in GLOBAL_STATE["clinics"]:
+        clinic = GLOBAL_STATE["clinics"][clinic_name]
         clinic["completed_count"] += 1
         
         needed_for_60 = math.ceil(clinic["target"] * 0.6)
         if clinic["completed_count"] >= needed_for_60 and clinic["qualified_at"] is None:
             clinic["qualified_at"] = datetime.datetime.now()
+            GLOBAL_STATE["latest_news"] = f"🎉 震撼速報：【{clinic_name}】全員達標 60% 門檻！率先取得優先選島權！"
+        else:
+            GLOBAL_STATE["latest_news"] = f"🔥 最新進度：同仁 `{employee_id}` 通關！【{clinic_name}】登船人數 +1（目前 {clinic['completed_count']} 人）！"
     
     return True, "成功通關！為所屬院所增加 1 名航行戰力！"
 
 def select_island_atomic(clinic_name, island_code):
-    island = st.session_state.islands.get(island_code)
-    clinic = st.session_state.clinics.get(clinic_name)
+    island = GLOBAL_STATE["islands"].get(island_code)
+    clinic = GLOBAL_STATE["clinics"].get(clinic_name)
     
     if not island or not clinic:
         return False, "無效的選擇"
@@ -1217,6 +1199,7 @@ def select_island_atomic(clinic_name, island_code):
     island["status"] = "taken"
     island["taken_by"] = clinic["name"]
     clinic["selected_island"] = f"{island['name']} ({island_code})"
+    GLOBAL_STATE["latest_news"] = f"🚩 重大戰報：【{clinic['name']}】成功插旗佔領【{island['name']} ({island_code})】！"
     return True, f"成功登陸並佔領【{island['name']} ({island_code})】！"
 
 def reset_user_session():
@@ -1230,7 +1213,7 @@ def reset_user_session():
     }
 
 # ==========================================
-# 3. 視覺組件
+# 3. 視覺組件 (包含即時戰況與海圖)
 # ==========================================
 def render_header_banner():
     st.markdown("""
@@ -1241,7 +1224,17 @@ def render_header_banner():
     </div>
     """, unsafe_allow_html=True)
 
-def render_live_leaderboard():
+# 使用 @st.fragment 實現每 3 秒自動無感輪詢刷新戰況
+@st.fragment(run_every=3)
+def render_live_leaderboard_auto():
+    # 頂部即時動態廣播
+    st.markdown(f"""
+    <div class="live-broadcast-ticker">
+        <span class="ticker-tag">🔴 即時戰報</span>
+        <span style="font-weight:700; color:#0369a1; font-size:0.95rem;">{GLOBAL_STATE['latest_news']}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
     ranked_stats = get_ranked_active_stats()
     st.subheader("🔥 領航先鋒榜 (TOP 5)")
     
@@ -1253,7 +1246,7 @@ def render_live_leaderboard():
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。")
+        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（系統每 3 秒自動同步）")
         rank_emojis = ["🥇", "🥈", "🥉", "⭐", "⭐"]
         top_5 = ranked_stats[:5]
 
@@ -1284,11 +1277,11 @@ def render_live_leaderboard():
     st.markdown("---")
     st.subheader("🔍 查詢自家院所即時戰況")
     
-    clinic_options = list(st.session_state.clinics.keys())
+    clinic_options = list(GLOBAL_STATE["clinics"].keys())
     selected_cname = st.selectbox(
         "請選擇院所／單位以查看獨立進度：",
         options=clinic_options,
-        format_func=lambda x: f"{x} (目標: {st.session_state.clinics[x]['target']}人)"
+        format_func=lambda x: f"{x} (目標: {GLOBAL_STATE['clinics'][x]['target']}人)"
     )
     
     if selected_cname:
@@ -1329,7 +1322,7 @@ def render_live_leaderboard():
         
         st.markdown("</div>", unsafe_allow_html=True)
 
-def render_island_grid():
+    st.markdown("---")
     st.subheader("🗺️ 室內渡假群島配置海圖 (一排 5 個・共 5 排)")
     st.markdown("<div style='text-align: center; color: #0284c7; font-weight: 800; margin-bottom: 8px;'>🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊</div>", unsafe_allow_html=True)
     
@@ -1337,7 +1330,7 @@ def render_island_grid():
         cols = st.columns(5)
         for c in range(1, 6):
             code = f"R{r}-{c}"
-            island = st.session_state.islands[code]
+            island = GLOBAL_STATE["islands"][code]
             with cols[c - 1]:
                 if island["status"] == "taken":
                     st.markdown(f"""
@@ -1413,7 +1406,7 @@ def render_quiz_engine():
             reset_user_session()
             st.rerun()
     
-    all_done = all(u["progress"].values()) or (u["emp_id"] in st.session_state.completed_employees)
+    all_done = all(u["progress"].values()) or (u["emp_id"] in GLOBAL_STATE["completed_employees"])
     
     # 通關完成畫面
     if all_done:
@@ -1430,6 +1423,57 @@ def render_quiz_engine():
         return
 
     # 答題引擎
+    questions = {
+        "family_day": [
+            {
+                "id": "F01",
+                "q": "⛵ 2026 馬光家庭日的主軸名稱為何？",
+                "options": ["A. 光芒萬丈", "B. 沐光與航", "C. 同心協力", "D. 乘風破浪"],
+                "ans": 1,
+                "exp": "今年主題為『沐光與航』，象徵大家如艦隊般齊心出航！"
+            },
+            {
+                "id": "F02",
+                "q": "🏝️ 2026/11/01(日) 馬光家庭日的舉辦地點在哪裡？",
+                "options": ["A. 高雄流行音樂中心", "B. 高雄巨蛋", "C. 高雄展覽館南館＋室外草坪", "D. 駁二特區"],
+                "ans": 2,
+                "exp": "活動包下高雄展覽館南館渡假室內區與海景草坪！"
+            }
+        ],
+        "ma_kwang": [
+            {
+                "id": "M01",
+                "q": "⚓ 馬光醫療體系的核心理念不包含下列何者？",
+                "options": ["A. 專業誠信", "B. 視病猶親", "C. 利潤至上", "D. 團隊協作"],
+                "ans": 2,
+                "exp": "馬光始終以同仁與患者的幸福健康為最高準則。"
+            },
+            {
+                "id": "M02",
+                "q": "🏥 馬光中醫首創推動的『一人一診室』主要目的是？",
+                "options": ["A. 增加裝潢費用", "B. 守護隱私與維持極致問診品質", "C. 醫師休息室", "D. 放置更多儀器"],
+                "ans": 1,
+                "exp": "提供患者安心放鬆且完全獨立的問診環境！"
+            }
+        ],
+        "policy": [
+            {
+                "id": "P01",
+                "q": "📑 依最新通報指引，同仁若遇異常事件應於多久內登錄系統？",
+                "options": ["A. 24小時內", "B. 3天內", "C. 一週內", "D. 月底結算"],
+                "ans": 0,
+                "exp": "24小時內通報能讓跨部門及時提供後援支援！"
+            },
+            {
+                "id": "P02",
+                "q": "🎓 關於同仁外部進修補助政策，常規每年度可申請幾次補助？",
+                "options": ["A. 1次", "B. 2次", "C. 3次", "D. 原則每年2次，專案另計"],
+                "ans": 3,
+                "exp": "鼓勵同仁自主進修，每年常規提供 2 次額度支援。"
+            }
+        ]
+    }
+
     p_col1, p_col2, p_col3 = st.columns(3)
     p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
     p_col2.metric("② 馬光好精神", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
@@ -1447,7 +1491,7 @@ def render_quiz_engine():
 
     st.markdown(f"### 📍 當前航線：{cat_title}")
     
-    q_list = st.session_state.questions[active_cat]
+    q_list = questions[active_cat]
     q_data = q_list[u["current_q_idx"] % len(q_list)]
 
     st.markdown(f"**題目：{q_data['q']}**")
@@ -1483,32 +1527,28 @@ render_header_banner()
 tab_main, tab_quiz, tab_admin = st.tabs(["🔥 群島搶位戰況", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"])
 
 with tab_main:
-    render_live_leaderboard()
-    st.markdown("---")
-    render_island_grid()
-    if st.button("🔄 刷新最新戰況海圖", key="btn_refresh_map"):
-        st.rerun()
+    render_live_leaderboard_auto()
 
 with tab_quiz:
     render_quiz_engine()
 
 with tab_admin:
     st.subheader("🛠️ 院所搶島與活動後台控制")
-    qualified_clinics = [c for c in st.session_state.clinics.values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
+    qualified_clinics = [c for c in GLOBAL_STATE["clinics"].values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
     qualified_clinics = sorted(qualified_clinics, key=lambda x: x["qualified_at"] or datetime.datetime.max)
     
     if not qualified_clinics:
         st.info("目前尚無院所達到 60% 門檻。")
     else:
         admin_c = st.selectbox("選擇操作院所：", options=qualified_clinics, format_func=lambda x: f"{x['name']} (順位達標時間: {x['qualified_at'].strftime('%H:%M:%S') if x['qualified_at'] else 'N/A'})")
-        available_islands = [k for k, v in st.session_state.islands.items() if v["status"] == "available"]
+        available_islands = [k for k, v in GLOBAL_STATE["islands"].items() if v["status"] == "available"]
         
         if admin_c["selected_island"]:
             st.success(f"該院所已成功佔領：{admin_c['selected_island']}")
         elif not available_islands:
             st.warning("所有群島已被佔領完畢！")
         else:
-            target_island = st.selectbox("選擇要登陸的島嶼：", options=available_islands, format_func=lambda k: f"{st.session_state.islands[k]['name']} ({k})")
+            target_island = st.selectbox("選擇要登陸的島嶼：", options=available_islands, format_func=lambda k: f"{GLOBAL_STATE['islands'][k]['name']} ({k})")
             if st.button("確認鎖定並登島", key="btn_admin_lock"):
                 ok, msg = select_island_atomic(admin_c["name"], target_island)
                 if ok:
