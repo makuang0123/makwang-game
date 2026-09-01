@@ -26,7 +26,7 @@ CUSTOM_CSS = """
     .ocean-banner {
         background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #075985 100%);
         border-radius: 20px;
-        padding: 26px 16px;
+        padding: 24px 16px;
         color: white;
         text-align: center;
         box-shadow: 0 12px 25px -5px rgba(2, 132, 199, 0.35);
@@ -34,7 +34,7 @@ CUSTOM_CSS = """
         margin-bottom: 20px;
     }
     .banner-title {
-        font-size: 2.2rem;
+        font-size: 2.1rem;
         font-weight: 900;
         letter-spacing: 2px;
         color: #ffffff;
@@ -44,23 +44,36 @@ CUSTOM_CSS = """
         background: #ffffff;
         color: #0369a1;
         display: inline-block;
-        padding: 6px 18px;
+        padding: 5px 16px;
         border-radius: 30px;
         font-weight: 800;
-        font-size: 0.95rem;
-        margin-top: 10px;
+        font-size: 0.9rem;
+        margin-top: 8px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    /* 賽事排行榜卡片 */
-    .clinic-card {
+    /* 前五名 Top 5 專屬卡片 */
+    .top5-card {
         background: #ffffff;
         border-radius: 14px;
-        padding: 14px 18px;
+        padding: 12px 16px;
         margin-bottom: 10px;
-        border: 1.5px solid #e0f2fe;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 2px solid #bae6fd;
+        box-shadow: 0 4px 8px rgba(2, 132, 199, 0.1);
     }
+    
+    /* 自家院所專屬高亮卡片 */
+    .my-clinic-box {
+        background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+        border-radius: 16px;
+        padding: 18px;
+        border: 2.5px solid #22c55e;
+        box-shadow: 0 8px 16px rgba(34, 197, 94, 0.15);
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* 標籤徽章 */
     .badge-urgent {
         background-color: #ffedd5;
         color: #c2410c;
@@ -100,7 +113,7 @@ CUSTOM_CSS = """
         color: #ffffff;
     }
 
-    /* 手機按鈕 */
+    /* 按鈕樣式 */
     .stButton>button {
         width: 100%;
         border-radius: 12px;
@@ -121,27 +134,40 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 資料庫初始化 (Mock Data)
+# 1. 資料庫初始化 (帶入真實 29 院所/單位母數)
 # ==========================================
 def init_database():
     if "db_initialized" not in st.session_state:
-        # 院所清單
-        st.session_state.clinics = {
-            "C01": {"id": "C01", "name": "高雄旗艦院", "target": 100, "completed_count": 58, "qualified_at": None, "selected_island": None},
-            "C02": {"id": "C02", "name": "左營崇德院", "target": 80, "completed_count": 47, "qualified_at": None, "selected_island": None},
-            "C03": {"id": "C03", "name": "屏東自由院", "target": 120, "completed_count": 68, "qualified_at": None, "selected_island": None},
-            "C04": {"id": "C04", "name": "台南金華院", "target": 60, "completed_count": 35, "qualified_at": None, "selected_island": None},
-            "C05": {"id": "C05", "name": "鳳山五甲院", "target": 90, "completed_count": 40, "qualified_at": None, "selected_island": None},
-        }
+        raw_clinics = [
+            ("屏東", 59), ("潮州", 32), ("東港", 31), ("東霖", 33), ("瑞隆", 23),
+            ("五甲", 30), ("亞灣", 30), ("光華", 29), ("鳳山", 31), ("陽明", 40),
+            ("建功", 25), ("博愛", 32), ("明華", 34), ("意凡", 22), ("佑昌", 31),
+            ("藍田", 28), ("橋頭", 21), ("崇學", 39), ("成功", 16), ("民權", 24),
+            ("百合", 25), ("開元", 24), ("崇德", 18), ("彰化", 40), ("信義", 53),
+            ("迪化", 32), ("台東", 27), ("管理處", 47), ("專案成員", 25)
+        ]
 
-        # 5 排 × 每排 5 個 = 25 個渡假群島席位
+        st.session_state.clinics = {}
+        for idx, (name, target) in enumerate(raw_clinics, start=1):
+            cid = f"C{idx:02d}"
+            st.session_state.clinics[cid] = {
+                "id": cid,
+                "name": name,
+                "target": target,
+                "completed_count": 0,
+                "qualified_at": None,
+                "selected_island": None
+            }
+
+        # 5 排 × 每排 5 個 = 25 個渡假群島席位（含備用）
         st.session_state.islands = {}
         island_themes = [
             "蔚藍島", "晨曦島", "椰影島", "珊瑚島", "微風島",
             "晴空島", "海鷗島", "海星島", "珍珠島", "沐光島",
             "碧波島", "逐浪島", "金沙島", "揚帆島", "晨光島",
             "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
-            "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
+            "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島",
+            "璀璨島", "曙光島", "希望島", "繁星島", "海悅島"
         ]
         
         idx = 0
@@ -223,7 +249,7 @@ def get_clinic_stats(clinic_id):
     c = st.session_state.clinics[clinic_id]
     target = c["target"]
     completed = c["completed_count"]
-    rate = (completed / target) * 100
+    rate = (completed / target) * 100 if target > 0 else 0
     needed_for_60 = math.ceil(target * 0.6)
     diff = max(0, needed_for_60 - completed)
     is_qualified = completed >= needed_for_60
@@ -239,6 +265,12 @@ def get_clinic_stats(clinic_id):
         "qualified_at": c["qualified_at"],
         "selected_island": c["selected_island"]
     }
+
+def get_all_sorted_stats():
+    stats_list = [get_clinic_stats(cid) for cid in st.session_state.clinics]
+    qualified = sorted([s for s in stats_list if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
+    unqualified = sorted([s for s in stats_list if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
+    return qualified + unqualified
 
 def record_user_completion(employee_id, clinic_id):
     if employee_id in st.session_state.completed_employees:
@@ -271,7 +303,7 @@ def select_island_atomic(clinic_id, island_code):
     return True, f"成功登陸並佔領【{island['name']} ({island_code})】！"
 
 # ==========================================
-# 3. 視覺元件：渡假風主視覺與 5x5 群島海圖
+# 3. 視覺組件：前五名排行榜 + 自選院所快查
 # ==========================================
 def render_header_banner():
     st.markdown("""
@@ -283,42 +315,93 @@ def render_header_banner():
     """, unsafe_allow_html=True)
 
 def render_live_leaderboard():
-    st.subheader("🏆 院所艦隊戰況 (滿 60% 即刻搶登島嶼席位)")
+    sorted_stats = get_all_sorted_stats()
     
-    stats_list = [get_clinic_stats(cid) for cid in st.session_state.clinics]
-    qualified = sorted([s for s in stats_list if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
-    unqualified = sorted([s for s in stats_list if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
-    sorted_stats = qualified + unqualified
+    # -------------------------------
+    # 區塊 1：置頂前五名領航榜 (TOP 5)
+    # -------------------------------
+    st.subheader("🔥 領航先鋒榜・前五名戰況 (TOP 5)")
+    st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。")
+    
+    rank_emojis = ["🥇", "🥈", "🥉", "⭐", "⭐"]
+    top_5 = sorted_stats[:5]
 
-    for idx, s in enumerate(sorted_stats):
+    for idx, s in enumerate(top_5):
         rank = idx + 1
+        icon = rank_emojis[idx]
         with st.container():
             col1, col2, col3 = st.columns([2, 3, 2])
             with col1:
+                st.markdown(f"**{icon} #{rank} {s['name']}**")
                 if s["is_qualified"]:
-                    st.markdown(f"**#{rank} {s['name']}**")
                     st.markdown(f"<span class='badge-success'>🏆 第 {rank} 順位達標</span>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"**#{rank} {s['name']}**")
-                    st.markdown(f"<span class='badge-urgent'>🔥 還差 {s['diff']} 人達標！</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='badge-urgent'>🔥 還差 {s['diff']} 人！</span>", unsafe_allow_html=True)
             with col2:
-                progress_val = min(1.0, s["completed"] / s["target"])
+                progress_val = min(1.0, s["completed"] / s["target"]) if s["target"] > 0 else 0
                 st.progress(progress_val)
-                st.caption(f"⛵ 登船進度：{s['completed']}/{s['target']} 人 ({s['rate']:.1f}%) | 門檻：{s['needed_60']} 人")
+                st.caption(f"⛵ 登船：{s['completed']}/{s['target']} 人 ({s['rate']:.1f}%) | 60%門檻：{s['needed_60']} 人")
             with col3:
                 if s["selected_island"]:
                     st.markdown(f"🏝️ **已佔領：{s['selected_island']}**")
                 elif s["is_qualified"]:
-                    st.markdown("⏳ **待選島中**")
+                    st.markdown("⏳ **待劃位登島**")
                 else:
-                    st.markdown("🌊 **全院航行中**")
-        st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
+                    st.markdown("🌊 **全速航行中**")
+        st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ---------------------------------------------
+    # 區塊 2：下拉選單快速查詢自家院所 (My Clinic)
+    # ---------------------------------------------
+    st.subheader("🔍 查詢自家院所即時戰況")
+    
+    clinic_options = list(st.session_state.clinics.keys())
+    selected_cid = st.selectbox(
+        "請選擇院所／單位以查看獨立進度：",
+        options=clinic_options,
+        format_func=lambda x: st.session_state.clinics[x]["name"]
+    )
+    
+    if selected_cid:
+        # 計算該院所在全院中的總排名
+        my_rank = next((i + 1 for i, s in enumerate(sorted_stats) if s["id"] == selected_cid), None)
+        my_s = get_clinic_stats(selected_cid)
+        
+        st.markdown(f"""
+        <div class="my-clinic-box">
+            <div style="font-size: 1.25rem; font-weight: 800; color: #0284c7; margin-bottom: 6px;">
+                ⚓ {my_s['name']}（目前全院排名：第 #{my_rank} 名）
+            </div>
+            <div style="font-size: 0.95rem; color: #334155; margin-bottom: 8px;">
+                目標應答人數：<b>{my_s['target']} 人</b> ｜ 目前通關人數：<b>{my_s['completed']} 人</b> ｜ 完成率：<b>{my_s['rate']:.1f}%</b>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        progress_val = min(1.0, my_s["completed"] / my_s["target"]) if my_s["target"] > 0 else 0
+        st.progress(progress_val)
+        
+        col_a, col_b = st.columns([1, 1])
+        with col_a:
+            if my_s["is_qualified"]:
+                st.markdown(f"<span class='badge-success' style='font-size:0.9rem;'>🏆 已跨越 60% 門檻（取得順位資格）</span>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<span class='badge-urgent' style='font-size:0.9rem;'>🔥 距離 60% 門檻（{my_s['needed_60']}人）還差 <b>{my_s['diff']}</b> 人！</span>", unsafe_allow_html=True)
+        with col_b:
+            if my_s["selected_island"]:
+                st.markdown(f"🏝️ **已佔領席位：{my_s['selected_island']}**")
+            elif my_s["is_qualified"]:
+                st.markdown("⏳ **資格保留，等待管理員開放劃位**")
+            else:
+                st.markdown("🌊 **快號召院內同仁一起上線答題！**")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
 
 def render_island_grid():
     st.subheader("🗺️ 室內渡假群島配置海圖 (一排 5 個・共 5 排)")
     st.markdown("<div style='text-align: center; color: #0284c7; font-weight: 800; margin-bottom: 8px;'>🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊</div>", unsafe_allow_html=True)
     
-    # 5排 x 5欄
     for r in range(1, 6):
         cols = st.columns(5)
         for c in range(1, 6):
@@ -360,7 +443,7 @@ def render_quiz_engine():
         st.markdown("### ⛵ 登船啟航認證")
         with st.form("login_form"):
             emp_id = st.text_input("請輸入員工編號 (例: MK8801)", value="MK8801")
-            clinic_id = st.selectbox("選擇所屬院所", options=list(st.session_state.clinics.keys()), format_func=lambda x: st.session_state.clinics[x]["name"])
+            clinic_id = st.selectbox("選擇所屬院所／單位", options=list(st.session_state.clinics.keys()), format_func=lambda x: f"{st.session_state.clinics[x]['name']} (目標: {st.session_state.clinics[x]['target']}人)")
             submitted = st.form_submit_button("進入航海搶位戰")
             if submitted:
                 if emp_id.strip():
@@ -371,16 +454,19 @@ def render_quiz_engine():
         return
 
     c_info = get_clinic_stats(u["clinic_id"])
-    st.markdown(f"#### 👋 同仁 `{u['emp_id']}` 歡迎登船！所屬艦隊：**{c_info['name']}**")
+    sorted_stats = get_all_sorted_stats()
+    my_rank = next((i + 1 for i, s in enumerate(sorted_stats) if s["id"] == u["clinic_id"]), None)
+
+    st.markdown(f"#### 👋 同仁 `{u['emp_id']}` 歡迎登船！所屬單位：**{c_info['name']}** (目前排名 #{my_rank})")
     
     all_done = all(u["progress"].values()) or (u["emp_id"] in st.session_state.completed_employees)
     
     if all_done:
         st.success(f"🎉 恭喜通關！您已為 **{c_info['name']}** 貢獻 1 份登島戰力！")
         if c_info["is_qualified"]:
-            st.info("🏆 貴院所已跨越 60% 門檻！請密切關注大會廣播與即時海圖！")
+            st.info("🏆 貴院所已跨越 60% 門檻！請密切關注即時海圖與大會廣播！")
         else:
-            st.warning(f"🔥 距離 60% 門檻還差 **{c_info['diff']}** 人，快召集同院夥伴登船！")
+            st.warning(f"🔥 距離 60% 門檻還差 **{c_info['diff']}** 人，快召集院內夥伴登船！")
         return
 
     p_col1, p_col2, p_col3 = st.columns(3)
