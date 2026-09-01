@@ -146,21 +146,28 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 載入員工資料庫與院所母數 (Excel 同步)
+# 1. 員工與院所資料庫 (自動讀取 Excel + 完整防呆備援)
 # ==========================================
 @st.cache_data
-def load_employee_database():
-    excel_filename = "Employee-20260901200132.xlsx"
+def load_full_employee_data():
     emp_db = {}
-    clinic_counts = {}
+    clinic_counts = {
+        '屏東院': 56, '管理處': 54, '信義院': 53, '彰化院': 40, '陽明院': 38,
+        '崇學院': 35, '明華院': 34, '東港院': 32, '東霖院': 32, '鳳山院': 31,
+        '潮州院': 31, '博愛院': 30, '迪化院': 30, '五甲院': 29, '光華院': 28,
+        '台東院': 28, '藍田院': 28, '佑昌院': 28, '建功院': 27, '亞灣院': 27,
+        '瑞隆院': 24, '意凡院': 23, '民權院': 23, '開元院': 22, '百合院': 22,
+        '橋頭院': 18, '崇德院': 18, '成功院': 16, '專案成員': 15, '新加坡': 4
+    }
 
+    excel_filename = "Employee-20260901200132.xlsx"
     if os.path.exists(excel_filename):
         try:
             df = pd.read_excel(excel_filename)
             df['員工編號'] = df['員工編號'].astype(str).str.strip().str.upper()
             df['所屬院所'] = df['所屬院所'].astype(str).str.strip()
 
-            def extract_mmdd(val):
+            def parse_bday(val):
                 if pd.isnull(val):
                     return "0101"
                 if isinstance(val, pd.Timestamp):
@@ -169,9 +176,10 @@ def load_employee_database():
                     dt = pd.to_datetime(val)
                     return dt.strftime('%m%d')
                 except:
-                    return str(val).replace("-", "").replace("/", "")[-4:]
+                    s = str(val).replace("-", "").replace("/", "").strip()
+                    return s[-4:] if len(s) >= 4 else "0101"
 
-            df['bday_mmdd'] = df['生日'].apply(extract_mmdd)
+            df['bday_mmdd'] = df['生日'].apply(parse_bday)
 
             for _, row in df.iterrows():
                 emp_db[row['員工編號']] = {
@@ -180,30 +188,21 @@ def load_employee_database():
                     "title": str(row.get('職稱', '同仁'))
                 }
             clinic_counts = df['所屬院所'].value_counts().to_dict()
-        except Exception as e:
+        except Exception:
             pass
 
-    # 備援預設母數（依據 2026/09/01 人事名冊總計 876 人）
-    if not clinic_counts:
-        clinic_counts = {
-            '屏東院': 56, '管理處': 54, '信義院': 53, '彰化院': 40, '陽明院': 38,
-            '崇學院': 35, '明華院': 34, '東港院': 32, '東霖院': 32, '鳳山院': 31,
-            '潮州院': 31, '博愛院': 30, '迪化院': 30, '五甲院': 29, '光華院': 28,
-            '台東院': 28, '藍田院': 28, '佑昌院': 28, '建功院': 27, '亞灣院': 27,
-            '瑞隆院': 24, '意凡院': 23, '民權院': 23, '開元院': 22, '百合院': 22,
-            '橋頭院': 18, '崇德院': 18, '成功院': 16, '專案成員': 15, '新加坡': 4
-        }
-    
     return emp_db, clinic_counts
 
-def init_database():
-    if "db_initialized" not in st.session_state:
-        emp_db, clinic_counts = load_employee_database()
-        st.session_state.employee_db = emp_db
+# 獲取全域唯讀員工資料庫
+GLOBAL_EMP_DB, GLOBAL_CLINIC_COUNTS = load_full_employee_data()
 
-        # 建立 30 院所狀態字典
+def init_database():
+    # 確保 employee_db 永遠存在於 session 中
+    st.session_state.employee_db = GLOBAL_EMP_DB
+
+    if "clinics" not in st.session_state:
         st.session_state.clinics = {}
-        for idx, (c_name, count) in enumerate(clinic_counts.items(), start=1):
+        for idx, (c_name, count) in enumerate(GLOBAL_CLINIC_COUNTS.items(), start=1):
             cid = f"C{idx:02d}"
             st.session_state.clinics[c_name] = {
                 "id": cid,
@@ -214,7 +213,7 @@ def init_database():
                 "selected_island": None
             }
 
-        # 5 排 × 每排 5 個 = 25 個渡假群島席位
+    if "islands" not in st.session_state:
         st.session_state.islands = {}
         island_themes = [
             "蔚藍島", "晨曦島", "椰影島", "珊瑚島", "微風島",
@@ -223,7 +222,6 @@ def init_database():
             "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
             "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
         ]
-        
         idx = 0
         for r in range(1, 6):
             for c in range(1, 6):
@@ -239,7 +237,7 @@ def init_database():
                 }
                 idx += 1
 
-        # 三大題庫內容
+    if "questions" not in st.session_state:
         st.session_state.questions = {
             "family_day": [
                 {
@@ -291,8 +289,8 @@ def init_database():
             ]
         }
 
+    if "completed_employees" not in st.session_state:
         st.session_state.completed_employees = set()
-        st.session_state.db_initialized = True
 
 init_database()
 
@@ -503,16 +501,18 @@ def render_quiz_engine():
 
     u = st.session_state.user
 
-    # 1. 登入表單（輸入工號自動辨識單位＋四碼生日密碼）
+    # 1. 登入表單
     if not u["logged_in"]:
         st.markdown("### ⛵ 登船啟航認證")
         
-        emp_id_input = st.text_input("1. 請輸入員工編號 (例: CEO00003 或 MK000)", key="login_emp_input").strip().upper()
+        emp_id_input = st.text_input("1. 請輸入員工編號 (例: MKM00961 或 CEO00003)", key="login_emp_input").strip().upper()
         
         detected_clinic = ""
         matched_info = None
-        if emp_id_input and emp_id_input in st.session_state.employee_db:
-            matched_info = st.session_state.employee_db[emp_id_input]
+        emp_dict = getattr(st.session_state, "employee_db", GLOBAL_EMP_DB)
+        
+        if emp_id_input and emp_id_input in emp_dict:
+            matched_info = emp_dict[emp_id_input]
             detected_clinic = matched_info["clinic"]
             st.success(f"識別成功！所屬單位：**{detected_clinic}**（{matched_info['title']}）")
         elif emp_id_input:
