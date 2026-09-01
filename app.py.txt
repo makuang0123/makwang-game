@@ -1,0 +1,374 @@
+import streamlit as st
+import pandas as pd
+import datetime
+import math
+import random
+import time
+
+# ==========================================
+# 0. 頁面配置與自訂 CSS (Mobile-First 競賽感風格)
+# ==========================================
+st.set_page_config(
+    page_title="馬光家庭日｜院所搶位大挑戰",
+    page_icon="🏆",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+CUSTOM_CSS = """
+<style>
+    .main { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .urgent-badge {
+        background-color: #fee2e2;
+        color: #ef4444;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+    .success-badge {
+        background-color: #dcfce7;
+        color: #16a34a;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+    .seat-box {
+        border-radius: 8px;
+        padding: 14px;
+        text-align: center;
+        font-weight: bold;
+        transition: transform 0.2s;
+    }
+    .seat-available { background-color: #22c55e; color: white; border: 2px solid #16a34a; }
+    .seat-taken { background-color: #ef4444; color: white; border: 2px solid #dc2626; opacity: 0.9; }
+    .stButton>button {
+        width: 100%;
+        border-radius: 8px;
+        height: 3em;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+</style>
+"""
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+# ==========================================
+# 1. 資料庫初始化 (Mock Data)
+# ==========================================
+def init_database():
+    if "db_initialized" not in st.session_state:
+        # 院所資料與預設應參與人數
+        st.session_state.clinics = {
+            "C01": {"id": "C01", "name": "高雄旗艦院", "target": 100, "completed_count": 58, "qualified_at": None, "selected_seat": None},
+            "C02": {"id": "C02", "name": "左營崇德院", "target": 80, "completed_count": 47, "qualified_at": None, "selected_seat": None},
+            "C03": {"id": "C03", "name": "屏東自由院", "target": 120, "completed_count": 68, "qualified_at": None, "selected_seat": None},
+            "C04": {"id": "C04", "name": "台南金華院", "target": 60, "completed_count": 35, "qualified_at": None, "selected_seat": None},
+            "C05": {"id": "C05", "name": "鳳山五甲院", "target": 90, "completed_count": 40, "qualified_at": None, "selected_seat": None},
+        }
+
+        # 三大獨立題庫
+        st.session_state.questions = {
+            "family_day": [
+                {
+                    "id": "F01",
+                    "q": "今年馬光家庭日預計舉辦的主要核心主軸是什麼？",
+                    "options": ["A. 極限體能挑戰", "B. 聚心同行・榮耀共好", "C. 閉門研討會", "D. 自由解散野餐"],
+                    "ans": 1,
+                    "exp": "今年家庭日主軸為『聚心同行・榮耀共好』，凝聚全員與眷屬向心力！"
+                },
+                {
+                    "id": "F02",
+                    "q": "家庭日當天報到時，員工需要出示什麼完成眷屬禮品領取？",
+                    "options": ["A. 實體身分證", "B. 員工識別 QR Code", "C. 院所紙本名冊", "D. 健保卡"],
+                    "ans": 1,
+                    "exp": "請事先下載並出示活動專屬 QR Code，加速報到作業。"
+                }
+            ],
+            "ma_kwang": [
+                {
+                    "id": "M01",
+                    "q": "馬光醫療體系始終堅持的核心價值觀不包含下列何者？",
+                    "options": ["A. 專業誠信", "B. 視病猶親", "C. 利潤至上", "D. 團隊協作"],
+                    "ans": 2,
+                    "exp": "馬光始終以患者與同仁福祉為第一優先，堅持專業醫療與溫暖關懷。"
+                },
+                {
+                    "id": "M02",
+                    "q": "馬光中醫推動的『一人一診室』主要目的是？",
+                    "options": ["A. 增加裝潢成本", "B. 保護患者隱私與高規格就醫品質", "C. 方便醫師休息", "D. 配合消防法規"],
+                    "ans": 1,
+                    "exp": "提供患者安心且獨立的隱私看診環境，是馬光深耕醫療品質的承諾。"
+                }
+            ],
+            "policy": [
+                {
+                    "id": "P01",
+                    "q": "依據近期發布之院所內部滿意度指引，若同仁遇異常通報應於多久內登錄系統？",
+                    "options": ["A. 24小時內", "B. 3天內", "C. 一週內", "D. 月底結算即可"],
+                    "ans": 0,
+                    "exp": "重大異常或客訴事件需於 24 小時內完成初步系統通報，以利跨部門即時協助。"
+                },
+                {
+                    "id": "P02",
+                    "q": "關於新修訂之同仁教育訓練學分補助政策，每年度最高可申請幾次外部進修？",
+                    "options": ["A. 1次", "B. 2次", "C. 3次", "D. 依院長專案核定，原則每年2次"],
+                    "ans": 3,
+                    "exp": "政策鼓勵同仁持續精進，常規每年補助 2 次，特殊專案另行評估。"
+                }
+            ]
+        }
+
+        # 座位區資料
+        st.session_state.seats = {
+            "A區": {"name": "A區 (近舞台特區)", "capacity": 100, "status": "available", "taken_by": None},
+            "B區": {"name": "B區 (主中央景觀區)", "capacity": 80, "status": "available", "taken_by": None},
+            "C區": {"name": "C區 (鄰近餐飲動線區)", "capacity": 120, "status": "available", "taken_by": None},
+            "D區": {"name": "D區 (東側舒適沙發區)", "capacity": 60, "status": "available", "taken_by": None},
+            "E區": {"name": "E區 (西側歡樂家庭區)", "capacity": 90, "status": "available", "taken_by": None},
+        }
+
+        # 防止重複計算的員工完成紀錄
+        st.session_state.completed_employees = set()
+        st.session_state.db_initialized = True
+
+init_database()
+
+# ==========================================
+# 2. 業務邏輯 (60% 門檻計算、鎖定搶位)
+# ==========================================
+def get_clinic_stats(clinic_id):
+    c = st.session_state.clinics[clinic_id]
+    target = c["target"]
+    completed = c["completed_count"]
+    rate = (completed / target) * 100
+    needed_for_60 = math.ceil(target * 0.6)
+    diff = max(0, needed_for_60 - completed)
+    is_qualified = completed >= needed_for_60
+    return {
+        "id": clinic_id,
+        "name": c["name"],
+        "target": target,
+        "completed": completed,
+        "rate": rate,
+        "needed_60": needed_for_60,
+        "diff": diff,
+        "is_qualified": is_qualified,
+        "qualified_at": c["qualified_at"],
+        "selected_seat": c["selected_seat"]
+    }
+
+def record_user_completion(employee_id, clinic_id):
+    if employee_id in st.session_state.completed_employees:
+        return False, "您先前已經完成過答題，戰力已計入！"
+    
+    st.session_state.completed_employees.add(employee_id)
+    clinic = st.session_state.clinics[clinic_id]
+    clinic["completed_count"] += 1
+    
+    needed_for_60 = math.ceil(clinic["target"] * 0.6)
+    if clinic["completed_count"] >= needed_for_60 and clinic["qualified_at"] is None:
+        clinic["qualified_at"] = datetime.datetime.now()
+    
+    return True, "成功通關！為所屬院所貢獻 1 名關鍵戰力！"
+
+def select_seat_atomic(clinic_id, seat_key):
+    seat = st.session_state.seats.get(seat_key)
+    clinic = st.session_state.clinics.get(clinic_id)
+    
+    if not seat or not clinic:
+        return False, "無效的選擇"
+    if seat["status"] == "taken":
+        return False, f"太慢了！{seat_key} 剛剛已被 {seat['taken_by']} 選走！"
+    if clinic["selected_seat"] is not None:
+        return False, f"貴院所已經選擇過 {clinic['selected_seat']}，無法重複選擇。"
+    
+    seat["status"] = "taken"
+    seat["taken_by"] = clinic["name"]
+    clinic["selected_seat"] = seat_key
+    return True, f"成功搶下 {seat_key}！"
+
+# ==========================================
+# 3. 畫面渲染：排行榜與座位圖
+# ==========================================
+def render_live_leaderboard():
+    st.subheader("🔥 院所搶位即時戰況 (60% 取得選位權)")
+    
+    stats_list = [get_clinic_stats(cid) for cid in st.session_state.clinics]
+    qualified = sorted([s for s in stats_list if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
+    unqualified = sorted([s for s in stats_list if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
+    sorted_stats = qualified + unqualified
+
+    for idx, s in enumerate(sorted_stats):
+        rank = idx + 1
+        with st.container():
+            col1, col2, col3 = st.columns([1.5, 3, 2])
+            with col1:
+                if s["is_qualified"]:
+                    st.markdown(f"**#{rank} {s['name']}**")
+                    st.markdown(f"<span class='success-badge'>🏆 順位 {rank} 達標</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"**#{rank} {s['name']}**")
+                    st.markdown(f"<span class='urgent-badge'>🔥 還差 {s['diff']} 人！</span>", unsafe_allow_html=True)
+            with col2:
+                progress_val = min(1.0, s["completed"] / s["target"])
+                st.progress(progress_val)
+                st.caption(f"進度：{s['completed']}/{s['target']} 人 ({s['rate']:.1f}%) | 門檻：{s['needed_60']} 人")
+            with col3:
+                if s["selected_seat"]:
+                    st.markdown(f"🪑 **已鎖定：{s['selected_seat']}**")
+                elif s["is_qualified"]:
+                    st.markdown("⏳ **待選位中**")
+                else:
+                    st.markdown("⚪ **衝刺中**")
+        st.markdown("---")
+
+def render_seat_map():
+    st.subheader("🪑 活動室內座位即時配置圖")
+    st.markdown("--- 舞台前方 (STAGE) ---")
+    
+    cols = st.columns(len(st.session_state.seats))
+    for idx, (s_key, s_val) in enumerate(st.session_state.seats.items()):
+        with cols[idx]:
+            if s_val["status"] == "taken":
+                st.markdown(f"""
+                <div class="seat-box seat-taken">
+                    <div>🔴 {s_key}</div>
+                    <div style="font-size:0.8rem; margin-top:4px;">{s_val['taken_by']}</div>
+                    <div style="font-size:0.75rem;">(已鎖定)</div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div class="seat-box seat-available">
+                    <div>🟢 {s_key}</div>
+                    <div style="font-size:0.8rem; margin-top:4px;">容量 {s_val['capacity']}人</div>
+                    <div style="font-size:0.75rem;">(可選擇)</div>
+                </div>
+                """, unsafe_allow_html=True)
+    st.caption("🟢 綠色：目前可搶選 | 🔴 紅色：已被其他院所鎖定")
+
+def render_quiz_engine():
+    if "user" not in st.session_state:
+        st.session_state.user = {
+            "logged_in": False,
+            "emp_id": "",
+            "clinic_id": "C01",
+            "progress": {"family_day": False, "ma_kwang": False, "policy": False},
+            "current_q_idx": 0,
+            "wrong_feedback": None
+        }
+
+    u = st.session_state.user
+
+    if not u["logged_in"]:
+        st.markdown("### 🎯 員工身分認證")
+        with st.form("login_form"):
+            emp_id = st.text_input("請輸入員工編號 (例: MK8801)", value="MK8801")
+            clinic_id = st.selectbox("選擇所屬院所", options=list(st.session_state.clinics.keys()), format_func=lambda x: st.session_state.clinics[x]["name"])
+            submitted = st.form_submit_button("進入搶位戰場")
+            if submitted:
+                if emp_id.strip():
+                    u["logged_in"] = True
+                    u["emp_id"] = emp_id.strip()
+                    u["clinic_id"] = clinic_id
+                    st.rerun()
+        return
+
+    c_info = get_clinic_stats(u["clinic_id"])
+    st.markdown(f"#### 👋 同仁 `{u['emp_id']}` 歡迎上線！所屬：**{c_info['name']}**")
+    
+    all_done = all(u["progress"].values()) or (u["emp_id"] in st.session_state.completed_employees)
+    
+    if all_done:
+        st.success(f"🎉 您已全數完成三大關卡！已為 **{c_info['name']}** 貢獻戰力！")
+        if c_info["is_qualified"]:
+            st.info("🏆 貴院所已成功達標 60%！目前排定選位順位，敬請鎖定現場即時看板！")
+        else:
+            st.warning(f"🔥 距離 60% 門檻還差 **{c_info['diff']}** 人，快呼叫院所夥伴一起挑戰！")
+        return
+
+    p_col1, p_col2, p_col3 = st.columns(3)
+    p_col1.metric("① 家庭日題庫", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
+    p_col2.metric("② 馬光文化題庫", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
+    p_col3.metric("③ 近期政策題庫", "✅ 通關" if u["progress"]["policy"] else "⬜ 挑戰中")
+
+    if not u["progress"]["family_day"]:
+        active_cat = "family_day"
+        cat_title = "關卡一：家庭日活動通"
+    elif not u["progress"]["ma_kwang"]:
+        active_cat = "ma_kwang"
+        cat_title = "關卡二：馬光核心文化"
+    else:
+        active_cat = "policy"
+        cat_title = "關卡三：重要政策與規範"
+
+    st.markdown(f"### 📍 當前挑戰：{cat_title}")
+    
+    q_list = st.session_state.questions[active_cat]
+    q_data = q_list[u["current_q_idx"] % len(q_list)]
+
+    st.markdown(f"**題目：{q_data['q']}**")
+    selected_option = st.radio("請選擇正確答案：", range(len(q_data["options"])), format_func=lambda i: q_data["options"][i], key=f"q_{active_cat}_{u['current_q_idx']}")
+
+    if u["wrong_feedback"]:
+        st.error(f"❌ 答錯囉！{u['wrong_feedback']['msg']}")
+        st.info(f"💡 **解析叮嚀**：{u['wrong_feedback']['exp']}")
+
+    if st.button("送出答案", type="primary"):
+        if selected_option == q_data["ans"]:
+            u["progress"][active_cat] = True
+            u["wrong_feedback"] = None
+            u["current_q_idx"] = 0
+            
+            if all(u["progress"].values()):
+                success, msg = record_user_completion(u["emp_id"], u["clinic_id"])
+                st.balloons()
+            st.rerun()
+        else:
+            u["wrong_feedback"] = {
+                "msg": f"正確答案是：{q_data['options'][q_data['ans']]}",
+                "exp": q_data["exp"]
+            }
+            u["current_q_idx"] += 1
+            st.rerun()
+
+# ==========================================
+# 4. 主頁籤入口
+# ==========================================
+tab_main, tab_quiz, tab_admin = st.tabs(["🔥 搶位即時戰況", "🎯 答題闖關入口", "⚙️ 管理員選位控制"])
+
+with tab_main:
+    render_live_leaderboard()
+    render_seat_map()
+    if st.button("🔄 刷新最新戰況數據"):
+        st.rerun()
+
+with tab_quiz:
+    render_quiz_engine()
+
+with tab_admin:
+    st.subheader("🛠️ 院所選位與活動後台控制")
+    qualified_clinics = [c for c in st.session_state.clinics.values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
+    qualified_clinics = sorted(qualified_clinics, key=lambda x: x["qualified_at"] or datetime.datetime.max)
+    
+    if not qualified_clinics:
+        st.info("目前尚無院所達到 60% 門檻。")
+    else:
+        admin_c = st.selectbox("選擇操作院所：", options=qualified_clinics, format_func=lambda x: f"{x['name']} (順位達標時間: {x['qualified_at'].strftime('%H:%M:%S') if x['qualified_at'] else 'N/A'})")
+        available_seats = [k for k, v in st.session_state.seats.items() if v["status"] == "available"]
+        
+        if admin_c["selected_seat"]:
+            st.success(f"該院所已劃位：{admin_c['selected_seat']}")
+        elif not available_seats:
+            st.warning("所有座位已被搶選完畢！")
+        else:
+            target_seat = st.selectbox("選擇鎖定區域：", options=available_seats)
+            if st.button("確認鎖定座位"):
+                ok, msg = select_seat_atomic(admin_c["id"], target_seat)
+                if ok:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
