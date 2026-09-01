@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 import math
-import random
+import os
 
 # ==========================================
 # 0. 頁面配置與藍白渡假風 CSS
@@ -146,26 +146,69 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 資料庫初始化 (全部 29 個單位母數，初始完成數為 0)
+# 1. 載入員工資料庫與院所母數 (Excel 同步)
 # ==========================================
+@st.cache_data
+def load_employee_database():
+    excel_filename = "Employee-20260901200132.xlsx"
+    emp_db = {}
+    clinic_counts = {}
+
+    if os.path.exists(excel_filename):
+        try:
+            df = pd.read_excel(excel_filename)
+            df['員工編號'] = df['員工編號'].astype(str).str.strip().str.upper()
+            df['所屬院所'] = df['所屬院所'].astype(str).str.strip()
+
+            def extract_mmdd(val):
+                if pd.isnull(val):
+                    return "0101"
+                if isinstance(val, pd.Timestamp):
+                    return val.strftime('%m%d')
+                try:
+                    dt = pd.to_datetime(val)
+                    return dt.strftime('%m%d')
+                except:
+                    return str(val).replace("-", "").replace("/", "")[-4:]
+
+            df['bday_mmdd'] = df['生日'].apply(extract_mmdd)
+
+            for _, row in df.iterrows():
+                emp_db[row['員工編號']] = {
+                    "clinic": row['所屬院所'],
+                    "bday": row['bday_mmdd'],
+                    "title": str(row.get('職稱', '同仁'))
+                }
+            clinic_counts = df['所屬院所'].value_counts().to_dict()
+        except Exception as e:
+            pass
+
+    # 備援預設母數（依據 2026/09/01 人事名冊總計 876 人）
+    if not clinic_counts:
+        clinic_counts = {
+            '屏東院': 56, '管理處': 54, '信義院': 53, '彰化院': 40, '陽明院': 38,
+            '崇學院': 35, '明華院': 34, '東港院': 32, '東霖院': 32, '鳳山院': 31,
+            '潮州院': 31, '博愛院': 30, '迪化院': 30, '五甲院': 29, '光華院': 28,
+            '台東院': 28, '藍田院': 28, '佑昌院': 28, '建功院': 27, '亞灣院': 27,
+            '瑞隆院': 24, '意凡院': 23, '民權院': 23, '開元院': 22, '百合院': 22,
+            '橋頭院': 18, '崇德院': 18, '成功院': 16, '專案成員': 15, '新加坡': 4
+        }
+    
+    return emp_db, clinic_counts
+
 def init_database():
     if "db_initialized" not in st.session_state:
-        raw_clinics = [
-            ("屏東", 59), ("潮州", 32), ("東港", 31), ("東霖", 33), ("瑞隆", 23),
-            ("五甲", 30), ("亞灣", 30), ("光華", 29), ("鳳山", 31), ("陽明", 40),
-            ("建功", 25), ("博愛", 32), ("明華", 34), ("意凡", 22), ("佑昌", 31),
-            ("藍田", 28), ("橋頭", 21), ("崇學", 39), ("成功", 16), ("民權", 24),
-            ("百合", 25), ("開元", 24), ("崇德", 18), ("彰化", 40), ("信義", 53),
-            ("迪化", 32), ("台東", 27), ("管理處", 47), ("專案成員", 25)
-        ]
+        emp_db, clinic_counts = load_employee_database()
+        st.session_state.employee_db = emp_db
 
+        # 建立 30 院所狀態字典
         st.session_state.clinics = {}
-        for idx, (name, target) in enumerate(raw_clinics, start=1):
+        for idx, (c_name, count) in enumerate(clinic_counts.items(), start=1):
             cid = f"C{idx:02d}"
-            st.session_state.clinics[cid] = {
+            st.session_state.clinics[c_name] = {
                 "id": cid,
-                "name": name,
-                "target": target,
+                "name": c_name,
+                "target": int(count),
                 "completed_count": 0,
                 "qualified_at": None,
                 "selected_island": None
@@ -178,8 +221,7 @@ def init_database():
             "晴空島", "海鷗島", "海星島", "珍珠島", "沐光島",
             "碧波島", "逐浪島", "金沙島", "揚帆島", "晨光島",
             "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
-            "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島",
-            "璀璨島", "曙光島", "希望島", "繁星島", "海悅島"
+            "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
         ]
         
         idx = 0
@@ -257,8 +299,8 @@ init_database()
 # ==========================================
 # 2. 業務核心邏輯
 # ==========================================
-def get_clinic_stats(clinic_id):
-    c = st.session_state.clinics[clinic_id]
+def get_clinic_stats(clinic_name):
+    c = st.session_state.clinics[clinic_name]
     target = c["target"]
     completed = c["completed_count"]
     rate = (completed / target) * 100 if target > 0 else 0
@@ -266,7 +308,7 @@ def get_clinic_stats(clinic_id):
     diff = max(0, needed_for_60 - completed)
     is_qualified = completed >= needed_for_60
     return {
-        "id": clinic_id,
+        "id": c["id"],
         "name": c["name"],
         "target": target,
         "completed": completed,
@@ -279,18 +321,18 @@ def get_clinic_stats(clinic_id):
     }
 
 def get_ranked_active_stats():
-    all_stats = [get_clinic_stats(cid) for cid in st.session_state.clinics]
+    all_stats = [get_clinic_stats(c_name) for c_name in st.session_state.clinics]
     active_stats = [s for s in all_stats if s["completed"] > 0]
     qualified = sorted([s for s in active_stats if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
     unqualified = sorted([s for s in active_stats if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
     return qualified + unqualified
 
-def record_user_completion(employee_id, clinic_id):
+def record_user_completion(employee_id, clinic_name):
     if employee_id in st.session_state.completed_employees:
         return False, "您先前已經通關，戰力已計入！"
     
     st.session_state.completed_employees.add(employee_id)
-    clinic = st.session_state.clinics[clinic_id]
+    clinic = st.session_state.clinics[clinic_name]
     clinic["completed_count"] += 1
     
     needed_for_60 = math.ceil(clinic["target"] * 0.6)
@@ -299,9 +341,9 @@ def record_user_completion(employee_id, clinic_id):
     
     return True, "成功通關！為所屬院所增加 1 名航行戰力！"
 
-def select_island_atomic(clinic_id, island_code):
+def select_island_atomic(clinic_name, island_code):
     island = st.session_state.islands.get(island_code)
-    clinic = st.session_state.clinics.get(clinic_id)
+    clinic = st.session_state.clinics.get(clinic_name)
     
     if not island or not clinic:
         return False, "無效的選擇"
@@ -316,11 +358,10 @@ def select_island_atomic(clinic_id, island_code):
     return True, f"成功登陸並佔領【{island['name']} ({island_code})】！"
 
 def reset_user_session():
-    """清空個人作答狀態，交給下一位同仁"""
     st.session_state.user = {
         "logged_in": False,
         "emp_id": "",
-        "clinic_id": "C01",
+        "clinic_name": "",
         "progress": {"family_day": False, "ma_kwang": False, "policy": False},
         "current_q_idx": 0,
         "wrong_feedback": None
@@ -384,15 +425,15 @@ def render_live_leaderboard():
     st.subheader("🔍 查詢自家院所即時戰況")
     
     clinic_options = list(st.session_state.clinics.keys())
-    selected_cid = st.selectbox(
+    selected_cname = st.selectbox(
         "請選擇院所／單位以查看獨立進度：",
         options=clinic_options,
-        format_func=lambda x: f"{st.session_state.clinics[x]['name']} (目標: {st.session_state.clinics[x]['target']}人)"
+        format_func=lambda x: f"{x} (目標: {st.session_state.clinics[x]['target']}人)"
     )
     
-    if selected_cid:
-        my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["id"] == selected_cid), None)
-        my_s = get_clinic_stats(selected_cid)
+    if selected_cname:
+        my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["name"] == selected_cname), None)
+        my_s = get_clinic_stats(selected_cname)
         rank_text = f"第 #{my_rank} 名" if my_rank is not None else "尚無排名 (待首位同仁通關啟航)"
         
         st.markdown(f"""
@@ -462,27 +503,44 @@ def render_quiz_engine():
 
     u = st.session_state.user
 
-    # 1. 登入表單
+    # 1. 登入表單（輸入工號自動辨識單位＋四碼生日密碼）
     if not u["logged_in"]:
         st.markdown("### ⛵ 登船啟航認證")
-        with st.form("login_form"):
-            emp_id = st.text_input("請輸入員工編號 (例: MK8801)", value="MK8801")
-            clinic_id = st.selectbox("選擇所屬院所／單位", options=list(st.session_state.clinics.keys()), format_func=lambda x: f"{st.session_state.clinics[x]['name']} (目標: {st.session_state.clinics[x]['target']}人)")
-            submitted = st.form_submit_button("進入航海搶位戰")
-            if submitted:
-                if emp_id.strip():
-                    u["logged_in"] = True
-                    u["emp_id"] = emp_id.strip()
-                    u["clinic_id"] = clinic_id
-                    st.rerun()
+        
+        emp_id_input = st.text_input("1. 請輸入員工編號 (例: CEO00003 或 MK000)", key="login_emp_input").strip().upper()
+        
+        detected_clinic = ""
+        matched_info = None
+        if emp_id_input and emp_id_input in st.session_state.employee_db:
+            matched_info = st.session_state.employee_db[emp_id_input]
+            detected_clinic = matched_info["clinic"]
+            st.success(f"識別成功！所屬單位：**{detected_clinic}**（{matched_info['title']}）")
+        elif emp_id_input:
+            st.warning("⚠️ 查無此員工編號，請確認輸入是否正確。")
+
+        bday_input = st.text_input("2. 請輸入四碼生日密碼 (例: 04月18日請輸入 0418)", type="password", max_chars=4, key="login_bday_input").strip()
+
+        if st.button("驗證身分並啟航", type="primary", key="btn_do_login"):
+            if not emp_id_input:
+                st.error("請輸入員工編號！")
+            elif not matched_info:
+                st.error("查無此員工編號，無法登入！")
+            elif not bday_input:
+                st.error("請輸入四碼生日密碼！")
+            elif matched_info["bday"] != bday_input:
+                st.error("生日密碼不正確，請重新輸入！(格式範例：0418)")
+            else:
+                u["logged_in"] = True
+                u["emp_id"] = emp_id_input
+                u["clinic_name"] = detected_clinic
+                st.rerun()
         return
 
-    c_info = get_clinic_stats(u["clinic_id"])
+    c_info = get_clinic_stats(u["clinic_name"])
     ranked_stats = get_ranked_active_stats()
-    my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["id"] == u["clinic_id"]), None)
+    my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["name"] == u["clinic_name"]), None)
     rank_str = f"目前排名 #{my_rank}" if my_rank is not None else "尚未啟航"
 
-    # 2. 登入後上方資訊條
     col_user, col_logout = st.columns([3, 1])
     with col_user:
         st.markdown(f"#### 👋 同仁 `{u['emp_id']}` 歡迎登船！所屬單位：**{c_info['name']}** ({rank_str})")
@@ -493,7 +551,7 @@ def render_quiz_engine():
     
     all_done = all(u["progress"].values()) or (u["emp_id"] in st.session_state.completed_employees)
     
-    # 3. 通關完成畫面（加入交給下一位夥伴按鈕）
+    # 通關完成畫面
     if all_done:
         st.success(f"🎉 恭喜通關！您已為 **{c_info['name']}** 貢獻 1 份登島戰力！")
         if c_info["is_qualified"]:
@@ -507,7 +565,7 @@ def render_quiz_engine():
             st.rerun()
         return
 
-    # 4. 答題進行中
+    # 答題引擎
     p_col1, p_col2, p_col3 = st.columns(3)
     p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
     p_col2.metric("② 馬光好精神", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
@@ -542,7 +600,7 @@ def render_quiz_engine():
             u["current_q_idx"] = 0
             
             if all(u["progress"].values()):
-                success, msg = record_user_completion(u["emp_id"], u["clinic_id"])
+                success, msg = record_user_completion(u["emp_id"], u["clinic_name"])
                 st.balloons()
             st.rerun()
         else:
@@ -588,7 +646,7 @@ with tab_admin:
         else:
             target_island = st.selectbox("選擇要登陸的島嶼：", options=available_islands, format_func=lambda k: f"{st.session_state.islands[k]['name']} ({k})")
             if st.button("確認鎖定並登島", key="btn_admin_lock"):
-                ok, msg = select_island_atomic(admin_c["id"], target_island)
+                ok, msg = select_island_atomic(admin_c["name"], target_island)
                 if ok:
                     st.success(msg)
                     st.rerun()
