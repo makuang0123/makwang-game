@@ -52,7 +52,7 @@ CUSTOM_CSS = """
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    /* 前五名 Top 5 專屬卡片 */
+    /* 置頂前五名領航榜卡片 */
     .top5-card {
         background: #ffffff;
         border-radius: 14px;
@@ -134,10 +134,11 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 資料庫初始化 (帶入真實 29 院所/單位母數)
+# 1. 資料庫初始化 (全部 29 個單位母數，初始完成數為 0)
 # ==========================================
 def init_database():
     if "db_initialized" not in st.session_state:
+        # 真實院所與員工總數 (全部 29 個單位)
         raw_clinics = [
             ("屏東", 59), ("潮州", 32), ("東港", 31), ("東霖", 33), ("瑞隆", 23),
             ("五甲", 30), ("亞灣", 30), ("光華", 29), ("鳳山", 31), ("陽明", 40),
@@ -154,12 +155,12 @@ def init_database():
                 "id": cid,
                 "name": name,
                 "target": target,
-                "completed_count": 0,
+                "completed_count": 0,  # 初始通關人數全數歸零
                 "qualified_at": None,
                 "selected_island": None
             }
 
-        # 5 排 × 每排 5 個 = 25 個渡假群島席位（含備用）
+        # 5 排 × 每排 5 個 = 25 個渡假群島席位（含備用席位）
         st.session_state.islands = {}
         island_themes = [
             "蔚藍島", "晨曦島", "椰影島", "珊瑚島", "微風島",
@@ -185,7 +186,7 @@ def init_database():
                 }
                 idx += 1
 
-        # 題庫
+        # 三大題庫內容
         st.session_state.questions = {
             "family_day": [
                 {
@@ -303,7 +304,7 @@ def select_island_atomic(clinic_id, island_code):
     return True, f"成功登陸並佔領【{island['name']} ({island_code})】！"
 
 # ==========================================
-# 3. 視覺組件：前五名排行榜 + 自選院所快查
+# 3. 視覺組件：前五名領航榜 + 自選院所快查
 # ==========================================
 def render_header_banner():
     st.markdown("""
@@ -361,11 +362,10 @@ def render_live_leaderboard():
     selected_cid = st.selectbox(
         "請選擇院所／單位以查看獨立進度：",
         options=clinic_options,
-        format_func=lambda x: st.session_state.clinics[x]["name"]
+        format_func=lambda x: f"{st.session_state.clinics[x]['name']} (目標: {st.session_state.clinics[x]['target']}人)"
     )
     
     if selected_cid:
-        # 計算該院所在全院中的總排名
         my_rank = next((i + 1 for i, s in enumerate(sorted_stats) if s["id"] == selected_cid), None)
         my_s = get_clinic_stats(selected_cid)
         
