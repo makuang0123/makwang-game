@@ -4,7 +4,7 @@ import datetime
 import math
 
 # ==========================================
-# 0. 頁面配置與高對比 Mobile-First CSS
+# 0. 頁面配置與藍白渡假風 CSS (含手機 5x5 與右側船型懸浮按鈕)
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -15,13 +15,12 @@ st.set_page_config(
 
 CUSTOM_CSS = """
 <style>
-    /* 全域海洋淺色背景 */
     .stApp { 
         background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%); 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     }
     
-    /* 主視覺 Banner：加深背景並加入文字多重陰影，字體極度銳利清晰 */
+    /* 頂部海軍深藍 Banner：高對比陰影文字 */
     .ocean-banner {
         background: linear-gradient(135deg, #0369a1 0%, #075985 50%, #0c4a6e 100%);
         border-radius: 18px;
@@ -30,7 +29,7 @@ CUSTOM_CSS = """
         text-align: center;
         box-shadow: 0 10px 20px -3px rgba(3, 105, 161, 0.4);
         border: 2px solid #38bdf8;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
     .banner-title {
         font-size: 1.85rem;
@@ -42,7 +41,7 @@ CUSTOM_CSS = """
     }
     .banner-badge {
         background: #fef08a;
-        color: #854d0e;
+        color: #854d0e !important;
         display: inline-block;
         padding: 5px 14px;
         border-radius: 20px;
@@ -51,60 +50,38 @@ CUSTOM_CSS = """
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
-    /* 搶眼獨立闖關入口 CTA 大按鈕 */
-    .hero-quiz-cta {
-        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-        border-radius: 14px;
-        padding: 14px 16px;
+    /* 右側隨時滑動的船型浮標按鈕 (Sticky/Fixed Floating Sailboat) */
+    .st-key-floating_boat_btn {
+        position: fixed !important;
+        right: 14px !important;
+        bottom: 95px !important;
+        z-index: 999999 !important;
+    }
+    .st-key-floating_boat_btn button {
+        width: 74px !important;
+        height: 74px !important;
+        border-radius: 50% !important;
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+        border: 3px solid #fef08a !important;
+        box-shadow: 0 8px 24px rgba(234, 88, 12, 0.6) !important;
         color: #ffffff !important;
-        text-align: center;
-        box-shadow: 0 8px 18px rgba(234, 88, 12, 0.45);
-        border: 2px solid #ffedd5;
-        margin-bottom: 16px;
-        cursor: pointer;
+        font-weight: 900 !important;
+        font-size: 0.85rem !important;
+        line-height: 1.25 !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        animation: floatSailboat 2.6s ease-in-out infinite alternate !important;
     }
-    .hero-cta-title {
-        font-size: 1.25rem;
-        font-weight: 900;
-        letter-spacing: 1px;
-        color: #ffffff;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-    }
-    .hero-cta-sub {
-        font-size: 0.85rem;
-        color: #ffedd5;
-        margin-top: 2px;
-        font-weight: 700;
-    }
-    
-    /* 即時戰況廣播跑馬燈 */
-    .live-broadcast-ticker {
-        background: #ffffff;
-        border: 2px solid #0284c7;
-        border-radius: 12px;
-        padding: 10px 14px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.12);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .ticker-tag {
-        background: #0284c7;
-        color: #ffffff !important;
-        padding: 3px 8px;
-        border-radius: 14px;
-        font-weight: 900;
-        font-size: 0.75rem;
-        white-space: nowrap;
-    }
-    .ticker-content {
-        font-weight: 800;
-        color: #0f172a;
-        font-size: 0.88rem;
+    @keyframes floatSailboat {
+        0% { transform: translateY(0px) rotate(-3deg); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45); }
+        50% { transform: translateY(-7px) rotate(3deg); box-shadow: 0 14px 28px rgba(234, 88, 12, 0.7); }
+        100% { transform: translateY(0px) rotate(-3deg); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45); }
     }
 
-    /* 手機 5x5 群島海圖專用自適應 Grid (手機寬度下一屏完整呈現) */
+    /* 手機 5x5 群島海圖專用自適應 Grid (手機一屏完整呈現) */
     .island-5x5-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -173,45 +150,80 @@ CUSTOM_CSS = """
         color: #e0f2fe;
     }
 
-    /* 自家院所專屬卡片 */
-    .my-clinic-box {
+    /* 頂部即時廣播跑馬燈 */
+    .live-broadcast-ticker {
+        background: #ffffff;
+        border: 2px solid #0284c7;
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.12);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .ticker-tag {
+        background: #0284c7;
+        color: #ffffff !important;
+        padding: 3px 8px;
+        border-radius: 14px;
+        font-weight: 900;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    .ticker-content {
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 0.88rem;
+    }
+
+    .empty-state-box {
         background: #ffffff;
         border-radius: 14px;
-        padding: 16px;
+        padding: 24px;
+        text-align: center;
+        border: 2px dashed #93c5fd;
+        color: #0369a1;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 15px;
+    }
+    .my-clinic-box {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px;
         border: 2.5px solid #16a34a;
         box-shadow: 0 6px 14px rgba(22, 163, 74, 0.15);
         margin-top: 10px;
-        margin-bottom: 18px;
+        margin-bottom: 20px;
     }
     .badge-urgent {
         background-color: #ffedd5;
         color: #9a3412 !important;
-        padding: 4px 8px;
-        border-radius: 16px;
+        padding: 4px 10px;
+        border-radius: 20px;
         font-weight: 800;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         border: 1px solid #fdba74;
     }
     .badge-success {
         background-color: #dcfce7;
         color: #15803d !important;
-        padding: 4px 8px;
-        border-radius: 16px;
+        padding: 4px 10px;
+        border-radius: 20px;
         font-weight: 800;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         border: 1px solid #86efac;
     }
     .badge-waiting {
         background-color: #f1f5f9;
         color: #334155 !important;
-        padding: 4px 8px;
-        border-radius: 16px;
+        padding: 4px 10px;
+        border-radius: 20px;
         font-weight: 800;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         border: 1px solid #cbd5e1;
     }
-
-    /* 手機按鈕 */
     .stButton>button {
         width: 100%;
         border-radius: 10px;
@@ -219,7 +231,7 @@ CUSTOM_CSS = """
         font-weight: 800;
         font-size: 1.02rem;
         background: #0284c7;
-        color: #ffffff !important;
+        color: white !important;
         border: none;
         box-shadow: 0 4px 10px rgba(2, 132, 199, 0.28);
     }
@@ -1263,7 +1275,7 @@ def reset_user_session():
     }
 
 # ==========================================
-# 3. 視覺組件 (含手機 5x5 群島 Sea Map)
+# 3. 視覺組件 (乾淨 HTML 渲染 5x5 與戰況)
 # ==========================================
 def render_header_banner():
     st.markdown("""
@@ -1274,7 +1286,7 @@ def render_header_banner():
     </div>
     """, unsafe_allow_html=True)
 
-def render_island_5x5_grid_html():
+def render_island_5x5_grid_clean():
     st.markdown("""
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
         <h4 style="margin:0; color:#0369a1; font-weight:800;">🗺️ 室內渡假群島配置海圖 (5×5)</h4>
@@ -1283,43 +1295,23 @@ def render_island_5x5_grid_html():
     <div style='text-align: center; color: #0284c7; font-weight: 800; font-size:0.8rem; margin: 4px 0;'>🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊</div>
     """, unsafe_allow_html=True)
     
-    html_cards = []
+    cards = []
     for r in range(1, 6):
         for c in range(1, 6):
             code = f"R{r}-{c}"
-            island = GLOBAL_STATE["islands"][code]
-            if island["status"] == "taken":
-                card = f"""
-                <div class="island-grid-item island-taken">
-                    <div class="island-title">🚩 {island['name']}</div>
-                    <div class="island-taken-who">{island['taken_by']}</div>
-                    <div class="island-code-taken">({code} 鎖定)</div>
-                </div>
-                """
+            isl = GLOBAL_STATE["islands"][code]
+            if isl["status"] == "taken":
+                cards.append(f'<div class="island-grid-item island-taken"><div class="island-title">🚩 {isl["name"]}</div><div class="island-taken-who">{isl["taken_by"]}</div><div class="island-code-taken">({code} 鎖定)</div></div>')
             else:
-                card = f"""
-                <div class="island-grid-item island-available">
-                    <div class="island-title">🏝️ {island['name']}</div>
-                    <div class="island-status-open">可搶登</div>
-                    <div class="island-code">({code})</div>
-                </div>
-                """
-            html_cards.append(card)
-            
-    grid_container = f"""
-    <div class="island-5x5-grid">
-        {"".join(html_cards)}
-    </div>
-    <div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">
-        ⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定
-    </div>
-    """
-    st.markdown(grid_container, unsafe_allow_html=True)
+                cards.append(f'<div class="island-grid-item island-available"><div class="island-title">🏝️ {isl["name"]}</div><div class="island-status-open">可搶登</div><div class="island-code">({code})</div></div>')
+    
+    # 緊湊無縮排 HTML 輸出，避免任何 Markdown 解析為代碼區塊
+    grid_html = f'<div class="island-5x5-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊
+# 局域自動刷新區塊 (每 3 秒自動輪詢最新戰報與海圖)
 @st.fragment(run_every=3)
 def render_live_leaderboard_auto():
-    # 頂部即時廣播
     st.markdown(f"""
     <div class="live-broadcast-ticker">
         <span class="ticker-tag">🔴 即時戰報</span>
@@ -1334,7 +1326,7 @@ def render_live_leaderboard_auto():
         st.markdown("""
         <div class="empty-state-box">
             ⛵ 全院艦隊整裝待發中！目前尚無同仁通關<br>
-            <span style="font-size:0.88rem; font-weight:normal; color:#475569;">點擊上方橘色按鈕【立即進入答題闖關】，搶下第一張選島門票！</span>
+            <span style="font-size:0.88rem; font-weight:normal; color:#475569;">點擊右側【⛵ 立即闖關】浮標，搶下第一張選島門票！</span>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -1410,13 +1402,13 @@ def render_live_leaderboard_auto():
             elif my_s["completed"] > 0:
                 st.markdown("🌊 **全速航行中，快呼叫更多夥伴！**")
             else:
-                st.markdown("⛵ **點擊上方闖關，奪得院所第 1 票！**")
+                st.markdown("⛵ **點擊右側浮標闖關，奪得院所第 1 票！**")
         
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
-    # 渲染 5x5 群島海圖 (在同一畫面中自動輪詢)
-    render_island_5x5_grid_html()
+    # 渲染 5x5 群島海圖
+    render_island_5x5_grid_clean()
 
 def render_quiz_engine():
     if "user" not in st.session_state:
@@ -1588,21 +1580,19 @@ def render_quiz_engine():
             st.rerun()
 
 # ==========================================
-# 4. 主畫面排版 (導覽分頁與獨立醒目闖關入口)
+# 4. 主畫面排版 (導覽分頁與右側船型浮動按鈕)
 # ==========================================
 render_header_banner()
 
-# 控制分頁跳轉的 session state
 if "nav_tab" not in st.session_state:
     st.session_state.nav_tab = "🔥 戰況看板 & 群島海圖"
 
-# 醒目大按鈕：若目前在首頁，提供超大顯眼入口直達答題闖關
+# 右側隨時跟隨滑動的船型浮動按鈕 (點擊立即跳轉作答)
 if st.session_state.nav_tab != "🎯 答題闖關入口":
-    if st.button("🎯 立即點我進入【答題闖關入口】助自家院所搶位！", key="btn_jump_to_quiz", type="primary"):
+    if st.button("⛵\n立即\n闖關", key="floating_boat_btn"):
         st.session_state.nav_tab = "🎯 答題闖關入口"
         st.rerun()
 
-# 導覽選單列 (使用 Radio 水平選單，保證按鈕點擊可即時切換)
 selected_nav = st.radio(
     "導覽選單",
     options=["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"],
