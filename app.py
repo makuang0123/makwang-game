@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS
+# 0. 頁面配置與高對比 CSS (位置拉高・超大郵輪・不遮擋・無程式碼外露)
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -21,6 +21,8 @@ CUSTOM_CSS = """
         background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%); 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     }
+    
+    /* 頂部海軍深藍 Banner：高對比陰影文字 */
     .ocean-banner {
         background: linear-gradient(135deg, #0369a1 0%, #075985 50%, #0c4a6e 100%);
         border-radius: 18px;
@@ -49,6 +51,8 @@ CUSTOM_CSS = """
         font-size: 0.85rem;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
+    
+    /* 🚢 巨型豪華郵輪浮標 (位置拉高至 bottom: 155px，徹底避開下方按鈕) */
     .floating-cruise-container {
         position: fixed !important;
         right: 4px !important;
@@ -65,6 +69,8 @@ CUSTOM_CSS = """
         50% { transform: translateY(-8px) rotate(1.5deg); }
         100% { transform: translateY(0px) rotate(-1.5deg); }
     }
+
+    /* 點擊感應層：透明按鈕完全覆蓋在巨型郵輪與大旗幟上 (同步拉高) */
     .st-key-floating_cruise_btn {
         position: fixed !important;
         right: 4px !important;
@@ -83,6 +89,16 @@ CUSTOM_CSS = """
         box-shadow: none !important;
         cursor: pointer !important;
     }
+    .st-key-floating_cruise_btn button:hover, 
+    .st-key-floating_cruise_btn button:active, 
+    .st-key-floating_cruise_btn button:focus {
+        background: transparent !important;
+        border: none !important;
+        color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* 輸入標題文字：加大至 1.18rem (~19px)，深黑色超清晰 */
     label[data-testid="stWidgetLabel"] p {
         font-size: 1.18rem !important;
         font-weight: 800 !important;
@@ -90,11 +106,18 @@ CUSTOM_CSS = """
         margin-bottom: 8px !important;
         letter-spacing: 0.5px !important;
     }
+    
+    /* 輸入框底色與邊框：純白實色底 + 深海軍藍邊框 + 陰影，立體顯眼 */
     div[data-baseweb="input"] {
         background-color: #ffffff !important;
         border: 2.5px solid #0284c7 !important;
         border-radius: 12px !important;
         box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    div[data-baseweb="input"]:focus-within {
+        border-color: #ea580c !important;
+        box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3) !important;
     }
     div[data-baseweb="input"] input {
         background-color: #ffffff !important;
@@ -103,7 +126,9 @@ CUSTOM_CSS = """
         color: #0f172a !important;
         padding: 12px 14px !important;
     }
-    .island-5x6-grid {
+
+    /* 手機 5x5 群島海圖專用自適應 Grid (手機一屏完整呈現) */
+    .island-5x5-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 5px;
@@ -170,6 +195,8 @@ CUSTOM_CSS = """
         font-size: 0.6rem;
         color: #e0f2fe;
     }
+
+    /* 頂部即時廣播跑馬燈 */
     .live-broadcast-ticker {
         background: #ffffff;
         border: 2px solid #0284c7;
@@ -195,6 +222,7 @@ CUSTOM_CSS = """
         color: #0f172a;
         font-size: 0.88rem;
     }
+
     .empty-state-box {
         background: #ffffff;
         border-radius: 14px;
@@ -222,6 +250,7 @@ CUSTOM_CSS = """
         border-radius: 20px;
         font-weight: 800;
         font-size: 0.8rem;
+        border: 1px solid #fdba74;
     }
     .badge-success {
         background-color: #dcfce7;
@@ -230,6 +259,7 @@ CUSTOM_CSS = """
         border-radius: 20px;
         font-weight: 800;
         font-size: 0.8rem;
+        border: 1px solid #86efac;
     }
     .badge-waiting {
         background-color: #f1f5f9;
@@ -238,6 +268,7 @@ CUSTOM_CSS = """
         border-radius: 20px;
         font-weight: 800;
         font-size: 0.8rem;
+        border: 1px solid #cbd5e1;
     }
     .stButton>button {
         width: 100%;
@@ -248,13 +279,14 @@ CUSTOM_CSS = """
         background: #0284c7;
         color: white !important;
         border: none;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.28);
     }
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 876 位全體同仁原始資料庫
+# 1. 876 位全體同仁原始資料庫 (無省略・無解碼・保證秒查)
 # ==========================================
 ALL_EMPLOYEES = {
 "CEO00002":("管理處","0101","醫師"),
@@ -1134,3 +1166,701 @@ ALL_EMPLOYEES = {
 "ZZH02863":("彰化院","1108","儲備診助人員"),
 "ZZH02877":("彰化院","1202","儲備診助人員")
 }
+
+# ==========================================
+# 1.1 官方題庫 (全 26 題完整內嵌)
+# ==========================================
+QUESTION_BANK = {
+    "family_day": [
+        {
+            "id": "FA01",
+            "q": "2026 馬光家庭日的主軸名稱為何？",
+            "options": ["A. 光芒萬丈", "B. 沐光嶼航", "C. 成風破浪"],
+            "ans": 1,
+            "exp": "今年主題為『沐光與航』，象徵大家如艦隊般齊心出航！"
+        },
+        {
+            "id": "FA02",
+            "q": "家庭日這次的歌唱大來賓是哪一位歌手?",
+            "options": ["A. 郭靜", "B. 王淨", "C. 梁靜茹"],
+            "ans": 0,
+            "exp": "今年的歌手是大家的童年回憶『郭靜』喔！"
+        },
+        {
+            "id": "FA03",
+            "q": "家庭日上哪一個選項\"不是\"會有的活動?",
+            "options": ["A. 闖關或手作", "B. 聽歌吃美食", "C. 睡覺"],
+            "ans": 2,
+            "exp": "可以聽歌、可以放鬆，這麼好的一天就不要睡了吧！"
+        },
+        {
+            "id": "FA04",
+            "q": "2026家庭日的地點位於高雄哪裡?",
+            "options": ["A. 高雄展覽館", "B. 高雄美術館", "C. 高雄技擊館"],
+            "ans": 0,
+            "exp": "今年家庭日的地點在高雄展覽館南館喔，不要跑錯囉！"
+        },
+        {
+            "id": "FA05",
+            "q": "2026家庭日於高雄展覽館南館舉辦，請問輕軌要搭乘到哪一站?",
+            "options": ["A. 軟體園區站", "B. 夢時代站", "C. 高雄展覽館站"],
+            "ans": 2,
+            "exp": "搭乘高雄輕軌至『高雄展覽館站』出站即可快速抵達！"
+        },
+        {
+            "id": "FA06",
+            "q": "2026年家庭日舉辦的日期為?",
+            "options": ["A. 2026-10-31", "B. 2026-11-01", "C. 2026-11-02"],
+            "ans": 1,
+            "exp": "2026家庭日將於 11 月 1 日（日）盛大舉行！"
+        },
+    ],
+    "ma_kwang": [
+        {
+            "id": "MA01",
+            "q": "請問馬光的第一家院所是哪個分院?",
+            "options": ["A. 屏東院", "B. 東港院", "C. 鳳山院"],
+            "ans": 1,
+            "exp": "1993年於屏東東港鎮開設「屏光院」（現為東港院）。"
+        },
+        {
+            "id": "MA02",
+            "q": "大哥近期出的新書名稱是?",
+            "options": ["A. 淬鍊成光", "B. 淬鍊成精", "C. 精益求精"],
+            "ans": 0,
+            "exp": "『淬鍊成光』講述馬光的歷史與成功背後的故事，各大書局都有賣喔，快來一睹中醫40年的菁華吧"
+        },
+        {
+            "id": "MA03",
+            "q": "馬光的發源地來自哪裡?",
+            "options": ["A. 綠島", "B. 澎湖", "C. 小琉球"],
+            "ans": 1,
+            "exp": "1991年於澎湖馬公市開設第一家中醫院所「馬光中醫」，亦為馬光醫療網第一家院所。"
+        },
+        {
+            "id": "MA04",
+            "q": "下列哪一個非馬光海外的據點",
+            "options": ["A. 新加坡", "B. 馬來西亞", "C. 英國"],
+            "ans": 2,
+            "exp": "1999年馬光中醫至新加坡、馬來西亞發展"
+        },
+        {
+            "id": "MA05",
+            "q": "馬光於2025年導入 AI 智慧中醫系統是甚麼?",
+            "options": ["A. 脈象儀", "B. 舌診儀", "C. 診斷儀"],
+            "ans": 1,
+            "exp": "2025年馬光與友達聯盟合作，導入 AI 智慧中醫系統—「舌診儀」"
+        },
+        {
+            "id": "MA06",
+            "q": "下列哪一個\"並非\"馬光的核心價值?",
+            "options": ["A. 誠實正直", "B. 照顧同事", "C. 堅持專業"],
+            "ans": 1,
+            "exp": "馬光的四大核心價值為『善待員工』、『照顧患者』、『堅持專業』、『誠實正直』，身為馬光人要熟記喔！"
+        },
+        {
+            "id": "MA07",
+            "q": "馬光中醫獨有的、專注於顧客服務的職位是?",
+            "options": ["A. CRM", "B. 診助人員", "C. 醫師"],
+            "ans": 0,
+            "exp": "中醫首創CRM顧客關係管理部門，這群擁有沉穩而親切氣質的小夥伴，穿梭於候診區與診間之間，為患者與醫護人員搭起溝通的橋梁，這群致力於提升服務品質，非常特別的職位就是『CRM』顧客管理專員"
+        },
+        {
+            "id": "MA08",
+            "q": "馬光三大企業文化是?",
+            "options": ["A. 正面力量", "B. 當責不讓", "C. 找好的人"],
+            "ans": 2,
+            "exp": "馬光的三大企業文化是『正面力量』、『當責不讓』、『找對的人』，一起成為最棒的馬光人！"
+        },
+        {
+            "id": "MA09",
+            "q": "馬光每一年尾牙都會播放的一首歌曲是?",
+            "options": ["A. 一定要成功", "B. 明天再擱來", "C. 明天會更好"],
+            "ans": 2,
+            "exp": "明天會更好行之有年，每一年都會由大哥領軍合唱，唱出馬光的期盼與美好的未來。"
+        },
+    ],
+    "policy": [
+        {
+            "id": "PO01",
+            "q": "依照內聯單【天然災害期間出勤交通補助暨天災出勤津貼】，請問若政府宣布颱風放假，有出勤上班的夥伴\"免附憑證\"的交通補助為多少元?",
+            "options": ["A. 300元", "B. 400元", "C. 500元"],
+            "ans": 1,
+            "exp": "颱風天配合營運出勤的夥伴，不論交通工具與距離，公司提供交通補助400元(免附憑證)，若居住地較遠的夥伴，可檢附相關交通憑證申請實際交通超過400元的部分"
+        },
+        {
+            "id": "PO02",
+            "q": "依照內聯單【天然災害期間出勤交通補助暨天災出勤津貼】之附件-天然災害(颱風)班別定義及人力編制原則，以下哪個配置人數有誤?",
+            "options": ["A. 醫師至少1名", "B. 前台2~4名", "C. 機動2名"],
+            "ans": 2,
+            "exp": "颱風班採取「維持必要醫療服務所需之基本人力」進行配置，因此不會再額外安排機動人力喔！"
+        },
+        {
+            "id": "PO03",
+            "q": "依照內聯單【醫療網員工離職通報及面談作業流程】，依照\"關懷原則\"以下敘述何者有誤?",
+            "options": ["A. 離職面談時應秉持尊重、同理、關懷及保密原則", "B. 不得以責備、威嚇、施壓或其他不當方式影響員工之離職決定", "C. 因員工已提出離職意向，中午訂餐可以忽略夥伴請他自己去外面用餐"],
+            "ans": 2,
+            "exp": "針對C選項，不得因員工提出離職意向或離職通知，而對員工為排擠、羞辱、威脅、不合理調整工作或其他不利對待。"
+        },
+        {
+            "id": "PO04",
+            "q": "依照內聯單【醫療網員工離職通報及面談作業流程】，當員工通報離職後，需進行哪些程序?",
+            "options": ["A. 進行面談", "B. 通報離職及工作交接", "C. 以上皆是"],
+            "ans": 2,
+            "exp": "當夥伴提出正式離職通知時，請依照離職流程進行相關手續，並留意時效"
+        },
+        {
+            "id": "PO05",
+            "q": "依照內聯單【考勤單據撤回申請表系統上線說明】，考勤單據撤回申請表這張表單之重要性何者有誤?",
+            "options": ["A. 提升行政效率，建立透明紀錄", "B. 多道溝通防線，資訊更加複雜", "C. 落實法規合規，保障雙方權益"],
+            "ans": 1,
+            "exp": "針對B選項，實際是簡化了跨單位與院所間的口頭傳達與確認流程，因此實際效益是\"簡化溝通審核讓資訊更即時同步\""
+        },
+        {
+            "id": "PO06",
+            "q": "依照內聯單【醫療網院所恢復院主管職務之通知及說明】，下列哪一項說明有誤?",
+            "options": ["A. 未來將朝向「院長」、「團隊」、「管理處」三方合作", "B. 院長與主管合作管理之主要職責為\"解決同仁和患者的問題及提升營運績效\"", "C. 欲報名主管的夥伴除了原擔任院主管的同仁可自行填寫外，其他夥伴亦可請院長推薦"],
+            "ans": 0,
+            "exp": "未來醫療網院所朝向三方合作：「院長」、「主管」、「管理處」；在馬光的核心價值、企業文化、制度系統之下，院所內部人事物由院長和院主管共同管理、管理處為監督及輔助角色"
+        },
+        {
+            "id": "PO07",
+            "q": "依照內聯單【115年度工時調整實施宣導公告】，醫療網定義的周工時下列哪一項說明有誤?",
+            "options": ["A. 每週工時40小時，包含基本工作時間、值班時間、會議時間、前置轉備(提前5分鐘上崗)及診後緩衝(下診後10分鐘內不申報加班)", "B. 如會議適逢休假，因會議時間已計入周工時內，可以要求夥伴參加，若無法參加亦必須事先請假", "C. 每週休假制度以每週休兩天(周日+週間一天)的休假模式進行安排，讓每位夥伴都能在每週獲得充分休息，避免長時間連續工作"],
+            "ans": 1,
+            "exp": "針對B選項，如會議適逢休假，夥伴可透過「補看」紀錄了解會亦內容與重點即可，且不需額外提前請假"
+        },
+        {
+            "id": "PO08",
+            "q": "依照內聯單【115年度工時調整實施宣導公告】，每週第幾次值班可以申報加班?",
+            "options": ["A. 第1次", "B. 第2次", "C. 第3次"],
+            "ans": 2,
+            "exp": "每週值班次數定為2次，當週若超過則可以申報加班，請於加班完成後主動填寫加班單"
+        },
+        {
+            "id": "PO09",
+            "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，以下何者非屬於公出之認定?",
+            "options": ["A. 會議及外部洽公", "B. 跨院所支援及行政作業", "C. 因個人需求外出購買飲料"],
+            "ans": 2,
+            "exp": "公出認定為同仁因接受指派或經團隊、主管核准，離開平日例行工作地點，前往其他院所、管理處、外部單位、會議地點、教育訓練地點或其他指定地點執行職務者，包括會議及外部洽公、跨院所支援及行政作業、教育訓練及內部認證考試及其他公務，若因個人因素或非上述類型則不屬於公出。"
+        },
+        {
+            "id": "PO10",
+            "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，交通工具使用原則何者有誤?",
+            "options": ["A. 跨縣市供出可依工作需求選擇高鐵、台鐵、客運、捷運等大眾運輸工具", "B. 市區短程移動建議優先選擇便利且具經濟效益之大眾運輸工具", "C. 攜帶大型物品、醫療相關備品、交通不便、豪雨、高溫、夜間安全或其他特殊原因，基於經濟效益考量最好還是自行騎車"],
+            "ans": 2,
+            "exp": "交通工具使用原則應依行程需求、工作效率及個人安全選擇適當交通方式，公司期待大家在順利完成任務的前提下，兼顧費用合理性與安全性。"
+        },
+        {
+            "id": "PO11",
+            "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，有關自行駕駛交通工具補助標準何者有誤?",
+            "options": ["A. 同仁因公務需要，應三人以上共乘，含駕駛人", "B. 若未符合上述自駕的條件，同縣市移動每公里補助3元", "C. 申請時需於公出旅費報告表填寫起訖地點及公里數，並提供Google地圖路線資料，以利核對與快速辦理"],
+            "ans": 0,
+            "exp": "針對A選項，二人以上共乘即可，含駕駛人"
+        },
+    ],
+}
+
+CLINIC_TARGETS = {
+    '屏東院': 56, '管理處': 54, '信義院': 53, '彰化院': 40, '陽明院': 38,
+    '崇學院': 35, '明華院': 34, '東港院': 32, '東霖院': 32, '鳳山院': 31,
+    '潮州院': 31, '博愛院': 30, '迪化院': 30, '五甲院': 29, '光華院': 28,
+    '台東院': 28, '藍田院': 28, '佑昌院': 28, '建功院': 27, '亞灣院': 27,
+    '瑞隆院': 24, '意凡院': 23, '民權院': 23, '開元院': 22, '百合院': 22,
+    '橋頭院': 18, '崇德院': 18, '成功院': 16, '專案成員': 15, '新加坡': 4
+}
+
+# ==========================================
+# 2. 全域持久化狀態 (跨使用者即時廣播)
+# ==========================================
+@st.cache_resource
+def get_global_game_state():
+    clinics = {}
+    for idx, (c_name, count) in enumerate(CLINIC_TARGETS.items(), start=1):
+        cid = f"C{idx:02d}"
+        clinics[c_name] = {
+            "id": cid,
+            "name": c_name,
+            "target": int(count),
+            "completed_count": 0,
+            "qualified_at": None,
+            "selected_island": None
+        }
+
+    islands = {}
+    island_themes = [
+        "蔚藍島", "晨曦島", "椰影島", "珊瑚島", "微風島",
+        "晴空島", "海鷗島", "海星島", "珍珠島", "沐光島",
+        "碧波島", "逐浪島", "金沙島", "揚帆島", "晨光島",
+        "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
+        "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
+    ]
+    idx = 0
+    for r in range(1, 6):
+        for c in range(1, 6):
+            code = f"R{r}-{c}"
+            name = island_themes[idx]
+            islands[code] = {
+                "code": code,
+                "name": name,
+                "row": r,
+                "col": c,
+                "status": "available",
+                "taken_by": None
+            }
+            idx += 1
+
+    return {
+        "clinics": clinics,
+        "islands": islands,
+        "completed_employees": set(),
+        "latest_news": "⛵ 全院艦隊整裝待發中！搶位戰即刻開打！"
+    }
+
+GLOBAL_STATE = get_global_game_state()
+
+def get_clinic_stats(clinic_name):
+    c = GLOBAL_STATE["clinics"].get(clinic_name, {"id": "C00", "name": clinic_name, "target": 30, "completed_count": 0, "qualified_at": None, "selected_island": None})
+    target = c["target"]
+    completed = c["completed_count"]
+    rate = (completed / target) * 100 if target > 0 else 0
+    needed_for_60 = math.ceil(target * 0.6)
+    diff = max(0, needed_for_60 - completed)
+    is_qualified = completed >= needed_for_60
+    return {
+        "id": c["id"],
+        "name": c["name"],
+        "target": target,
+        "completed": completed,
+        "rate": rate,
+        "needed_60": needed_for_60,
+        "diff": diff,
+        "is_qualified": is_qualified,
+        "qualified_at": c["qualified_at"],
+        "selected_island": c["selected_island"]
+    }
+
+def get_ranked_active_stats():
+    all_stats = [get_clinic_stats(c_name) for c_name in GLOBAL_STATE["clinics"]]
+    active_stats = [s for s in all_stats if s["completed"] > 0]
+    qualified = sorted([s for s in active_stats if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
+    unqualified = sorted([s for s in active_stats if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
+    return qualified + unqualified
+
+def record_user_completion(employee_id, clinic_name):
+    if employee_id in GLOBAL_STATE["completed_employees"]:
+        return False, "您先前已經通關，戰力已計入！"
+    
+    GLOBAL_STATE["completed_employees"].add(employee_id)
+    if clinic_name in GLOBAL_STATE["clinics"]:
+        clinic = GLOBAL_STATE["clinics"][clinic_name]
+        clinic["completed_count"] += 1
+        
+        needed_for_60 = math.ceil(clinic["target"] * 0.6)
+        if clinic["completed_count"] >= needed_for_60 and clinic["qualified_at"] is None:
+            clinic["qualified_at"] = datetime.datetime.now()
+            GLOBAL_STATE["latest_news"] = f"🎉 震撼速報：【{clinic_name}】全員達標 60% 門檻！率先取得優先選島權！"
+        else:
+            GLOBAL_STATE["latest_news"] = f"🔥 最新進度：同仁 `{employee_id}` 通關！【{clinic_name}】登船人數 +1（目前 {clinic['completed_count']} 人）！"
+    
+    return True, "成功通關！為所屬院所增加 1 名航行戰力！"
+
+def select_island_atomic(clinic_name, island_code):
+    island = GLOBAL_STATE["islands"].get(island_code)
+    clinic = GLOBAL_STATE["clinics"].get(clinic_name)
+    
+    if not island or not clinic:
+        return False, "無效的選擇"
+    if island["status"] == "taken":
+        return False, f"太慢了！【{island['name']}】剛被 {island['taken_by']} 搶先登島！"
+    if clinic["selected_island"] is not None:
+        return False, f"貴院所已經選擇過【{clinic['selected_island']}】，無法重複選擇。"
+    
+    island["status"] = "taken"
+    island["taken_by"] = clinic["name"]
+    clinic["selected_island"] = f"{island['name']} ({island_code})"
+    GLOBAL_STATE["latest_news"] = f"🚩 重大戰報：【{clinic['name']}】成功插旗佔領【{island['name']} ({island_code})】！"
+    return True, f"成功登陸並佔領【{island['name']} ({island_code})】！"
+
+def reset_user_session():
+    st.session_state.user = {
+        "logged_in": False,
+        "emp_id": "",
+        "clinic_name": "",
+        "progress": {"family_day": False, "ma_kwang": False, "policy": False},
+        "current_q": None,
+        "wrong_feedback": None
+    }
+
+# ==========================================
+# 3. 視覺組件 (乾淨 HTML 渲染 5x5 與戰況)
+# ==========================================
+def render_header_banner():
+    st.markdown("""
+    <div class="ocean-banner">
+        <div style="font-size: 0.95rem; letter-spacing: 1px; color: #bae6fd; font-weight:700;">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
+        <div class="banner-title">⛵ 沐光與航・群島搶位戰</div>
+        <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 海景草坪</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_island_5x5_grid_clean():
+    st.markdown("""
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+        <h4 style="margin:0; color:#0369a1; font-weight:800;">🗺️ 室內渡假群島配置海圖 (5×5)</h4>
+        <span style="font-size:0.75rem; color:#64748b;">一屏完整呈現</span>
+    </div>
+    <div style="text-align: center; margin: 12px 0 6px 0;">
+        <svg width="100%" height="48" viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 360px; margin: 0 auto; display: block;">
+            <polygon points="40,2 10,42 90,42" fill="url(#spotlight1)" opacity="0.45"/>
+            <polygon points="280,2 230,42 310,42" fill="url(#spotlight2)" opacity="0.45"/>
+            <polygon points="160,2 110,42 210,42" fill="url(#spotlightCenter)" opacity="0.5"/>
+            <rect x="25" y="2" width="270" height="4" rx="2" fill="#334155"/>
+            <circle cx="50" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <circle cx="110" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <circle cx="160" cy="4" r="4" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>
+            <circle cx="210" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <circle cx="270" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <path d="M40 34 L70 24 L250 24 L280 34 L270 44 L50 44 Z" fill="url(#stageWood)" stroke="#b45309" stroke-width="1.5"/>
+            <path d="M50 42 L270 42 L268 46 L52 46 Z" fill="#fef08a"/>
+            <rect x="158" y="16" width="4" height="12" rx="1" fill="#94a3b8"/>
+            <circle cx="160" cy="14" r="3" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+            <defs>
+                <linearGradient id="spotlight1" x1="40" y1="2" x2="50" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#fef08a" stop-opacity="0.8"/><stop offset="1" stop-color="#fef08a" stop-opacity="0"/></linearGradient>
+                <linearGradient id="spotlight2" x1="280" y1="2" x2="270" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#fef08a" stop-opacity="0.8"/><stop offset="1" stop-color="#fef08a" stop-opacity="0"/></linearGradient>
+                <linearGradient id="spotlightCenter" x1="160" y1="2" x2="160" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8" stop-opacity="0.9"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></linearGradient>
+                <linearGradient id="stageWood" x1="40" y1="24" x2="280" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#d97706"/><stop offset="0.5" stop-color="#b45309"/><stop offset="1" stop-color="#92400e"/></linearGradient>
+            </defs>
+        </svg>
+        <div style="font-size: 1.18rem; font-weight: 900; color: #0284c7; letter-spacing: 1.5px; text-shadow: 0 1px 3px rgba(2,132,199,0.25); margin-top: 5px; margin-bottom: 8px;">
+            🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    cards = []
+    for r in range(1, 6):
+        for c in range(1, 6):
+            code = f"R{r}-{c}"
+            isl = GLOBAL_STATE["islands"][code]
+            if isl["status"] == "taken":
+                cards.append(f'<div class="island-grid-item island-taken"><div class="island-title">🚩 {isl["name"]}</div><div class="island-taken-who">{isl["taken_by"]}</div><div class="island-code-taken">({code} 鎖定)</div></div>')
+            else:
+                cards.append(f'<div class="island-grid-item island-available"><div class="island-title">🏝️ {isl["name"]}</div><div class="island-status-open">可搶登</div><div class="island-code">({code})</div></div>')
+    
+    grid_html = f'<div class="island-5x5-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
+
+# 局域自動刷新區塊 (每 3 秒自動輪詢最新戰報與海圖)
+@st.fragment(run_every=3)
+def render_live_leaderboard_auto():
+    st.markdown(f"""
+    <div class="live-broadcast-ticker">
+        <span class="ticker-tag">🔴 即時戰報</span>
+        <span class="ticker-content">{GLOBAL_STATE['latest_news']}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    ranked_stats = get_ranked_active_stats()
+    st.subheader("🔥 領航先鋒榜 (TOP 5)")
+    
+    if not ranked_stats:
+        st.markdown("""
+        <div class="empty-state-box">
+            ⛵ 全院艦隊整裝待發中！目前尚無同仁通關<br>
+            <span style="font-size:0.88rem; font-weight:normal; color:#475569;">點擊右側【點我闖關】豪華郵輪，搶下第一張選島門票！</span>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 3 秒自動同步）")
+        rank_emojis = ["🥇", "🥈", "🥉", "⭐", "⭐"]
+        top_5 = ranked_stats[:5]
+
+        for idx, s in enumerate(top_5):
+            rank = idx + 1
+            icon = rank_emojis[idx] if idx < len(rank_emojis) else "⭐"
+            with st.container():
+                col1, col2, col3 = st.columns([2, 3, 2])
+                with col1:
+                    st.markdown(f"**{icon} #{rank} {s['name']}**")
+                    if s["is_qualified"]:
+                        st.markdown(f"<span class='badge-success'>🏆 第 {rank} 順位達標</span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<span class='badge-urgent'>🔥 還差 {s['diff']} 人！</span>", unsafe_allow_html=True)
+                with col2:
+                    progress_val = min(1.0, s["completed"] / s["target"]) if s["target"] > 0 else 0
+                    st.progress(progress_val)
+                    st.caption(f"⛵ 登船：{s['completed']}/{s['target']} 人 ({s['rate']:.1f}%) | 60%門檻：{s['needed_60']} 人")
+                with col3:
+                    if s["selected_island"]:
+                        st.markdown(f"🏝️ **已佔領：{s['selected_island']}**")
+                    elif s["is_qualified"]:
+                        st.markdown("⏳ **待劃位登島**")
+                    else:
+                        st.markdown("🌊 **全速航行中**")
+            st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.subheader("🔍 查詢自家院所即時戰況")
+    
+    clinic_options = list(GLOBAL_STATE["clinics"].keys())
+    selected_cname = st.selectbox(
+        "請選擇院所／單位以查看獨立進度：",
+        options=clinic_options,
+        format_func=lambda x: f"{x} (目標: {GLOBAL_STATE['clinics'][x]['target']}人)"
+    )
+    
+    if selected_cname:
+        my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["name"] == selected_cname), None)
+        my_s = get_clinic_stats(selected_cname)
+        rank_text = f"第 #{my_rank} 名" if my_rank is not None else "尚無排名 (待首位同仁通關啟航)"
+        
+        st.markdown(f"""
+        <div class="my-clinic-box">
+            <div style="font-size: 1.15rem; font-weight: 800; color: #0284c7; margin-bottom: 4px;">
+                ⚓ {my_s['name']}（全院即時戰況：<b>{rank_text}</b>）
+            </div>
+            <div style="font-size: 0.9rem; color: #1e293b; margin-bottom: 8px;">
+                目標人數：<b>{my_s['target']} 人</b> ｜ 通關人數：<b>{my_s['completed']} 人</b> ｜ 完成率：<b>{my_s['rate']:.1f}%</b>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        progress_val = min(1.0, my_s["completed"] / my_s["target"]) if my_s["target"] > 0 else 0
+        st.progress(progress_val)
+        
+        col_a, col_b = st.columns([1, 1])
+        with col_a:
+            if my_s["is_qualified"]:
+                st.markdown(f"<span class='badge-success'>🏆 已跨越 60% 門檻（取得順位資格）</span>", unsafe_allow_html=True)
+            elif my_s["completed"] > 0:
+                st.markdown(f"<span class='badge-urgent'>🔥 距離 60% 門檻還差 <b>{my_s['diff']}</b> 人！</span>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<span class='badge-waiting'>⏳ 尚未啟航（達標門檻：{my_s['needed_60']}人）</span>", unsafe_allow_html=True)
+        with col_b:
+            if my_s["selected_island"]:
+                st.markdown(f"🏝️ **已佔領席位：{my_s['selected_island']}**")
+            elif my_s["is_qualified"]:
+                st.markdown("⏳ **資格保留，等待管理員開放劃位**")
+            elif my_s["completed"] > 0:
+                st.markdown("🌊 **全速航行中，快呼叫更多夥伴！**")
+            else:
+                st.markdown("⛵ **點擊右側郵輪浮標闖關，奪得院所第 1 票！**")
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    render_island_5x5_grid_clean()
+
+def render_quiz_engine():
+    if "user" not in st.session_state:
+        reset_user_session()
+
+    u = st.session_state.user
+
+    # 1. 登入表單
+    if not u["logged_in"]:
+        st.markdown("### ⛵ 登船啟航認證")
+        
+        emp_id_raw = st.text_input("1. 請輸入員工編號 (例: MK12345)", key="login_emp_input")
+        emp_id_input = emp_id_raw.strip().upper() if emp_id_raw else ""
+        
+        detected_clinic = ""
+        matched_info = None
+        
+        if emp_id_input:
+            if emp_id_input in ALL_EMPLOYEES:
+                c_name, b_code, t_name = ALL_EMPLOYEES[emp_id_input]
+                matched_info = {"clinic": c_name, "bday": b_code, "title": t_name}
+                detected_clinic = c_name
+                st.success(f"識別成功！所屬單位：**{detected_clinic}**（{t_name}）")
+            else:
+                st.warning("⚠️ 查無此員工編號，請確認輸入是否正確。")
+
+        bday_input = st.text_input("2. 請輸入四碼生日密碼 (例: 05月20日請輸入 0520)", type="password", max_chars=4, key="login_bday_input").strip()
+
+        if st.button("驗證身分並啟航", type="primary", key="btn_do_login"):
+            if not emp_id_input:
+                st.error("請輸入員工編號！")
+            elif not matched_info:
+                st.error("查無此員工編號，無法登入！")
+            elif not bday_input:
+                st.error("請輸入四碼生日密碼！")
+            elif matched_info["bday"] != bday_input:
+                st.error("生日密碼不正確，請重新輸入！(格式範例：0520)")
+            else:
+                u["logged_in"] = True
+                u["emp_id"] = emp_id_input
+                u["clinic_name"] = detected_clinic
+                st.rerun()
+        return
+
+    c_info = get_clinic_stats(u["clinic_name"])
+    ranked_stats = get_ranked_active_stats()
+    my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["name"] == u["clinic_name"]), None)
+    rank_str = f"目前排名 #{my_rank}" if my_rank is not None else "尚未啟航"
+
+    col_user, col_logout = st.columns([3, 1])
+    with col_user:
+        st.markdown(f"#### 👋 同仁 `{u['emp_id']}` 歡迎登船！所屬單位：**{c_info['name']}** ({rank_str})")
+    with col_logout:
+        if st.button("🚪 切換同仁 / 登出", key="btn_logout_top"):
+            reset_user_session()
+            st.rerun()
+    
+    all_done = all(u["progress"].values()) or (u["emp_id"] in GLOBAL_STATE["completed_employees"])
+    
+    # 通關完成畫面
+    if all_done:
+        st.success(f"🎉 恭喜通關！您已為 **{c_info['name']}** 貢獻 1 份登島戰力！")
+        if c_info["is_qualified"]:
+            st.info("🏆 貴院所已跨越 60% 門檻！請密切關注即時海圖與大會廣播！")
+        else:
+            st.warning(f"🔥 距離 60% 門檻還差 **{c_info['diff']}** 人，快召集院內夥伴登船！")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🔄 交給下一位夥伴作答（更換員工編號）", type="primary", key="btn_next_user"):
+            reset_user_session()
+            st.rerun()
+        return
+
+    p_col1, p_col2, p_col3 = st.columns(3)
+    p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
+    p_col2.metric("② 馬光知識王", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
+    p_col3.metric("③ 重點新政策", "✅ 通關" if u["progress"]["policy"] else "⬜ 挑戰中")
+
+    if not u["progress"]["family_day"]:
+        active_cat = "family_day"
+        cat_title = "關卡一：沐光家庭日知多少 🌴 (隨機抽題)"
+    elif not u["progress"]["ma_kwang"]:
+        active_cat = "ma_kwang"
+        cat_title = "關卡二：馬光知識王文化通 ⚓ (隨機抽題)"
+    else:
+        active_cat = "policy"
+        cat_title = "關卡三：近期重點新政策 📑 (隨機抽題)"
+
+    st.markdown(f"### 📍 當前航線：{cat_title}")
+
+    active_pool = QUESTION_BANK[active_cat]
+    if u.get("current_q") is None or u.get("current_q", {}).get("cat") != active_cat:
+        q_pick = random.choice(active_pool).copy()
+        q_pick["cat"] = active_cat
+        u["current_q"] = q_pick
+
+    q_data = u["current_q"]
+
+    st.markdown(f"**題目：{q_data['q']}**")
+    selected_option = st.radio(
+        "請選擇正確答案：", 
+        range(len(q_data["options"])), 
+        format_func=lambda i: q_data["options"][i], 
+        key=f"q_{active_cat}_{q_data['id']}"
+    )
+
+    if u.get("wrong_feedback"):
+        st.error(f"❌ 答錯囉！{u['wrong_feedback']['msg']}")
+        st.info(f"💡 **解析叮嚀**：{u['wrong_feedback']['exp']}\\n\\n*(系統已為您隨機更換下一題，請繼續挑戰！)*")
+
+    if st.button("送出答案", type="primary", key="btn_submit_ans"):
+        if selected_option == q_data["ans"]:
+            u["progress"][active_cat] = True
+            u["wrong_feedback"] = None
+            u["current_q"] = None
+            
+            if all(u["progress"].values()):
+                success, msg = record_user_completion(u["emp_id"], u["clinic_name"])
+                st.balloons()
+            st.rerun()
+        else:
+            u["wrong_feedback"] = {
+                "msg": f"上一題題目是「{q_data['q']}」，正確答案是：{q_data['options'][q_data['ans']]}",
+                "exp": q_data["exp"]
+            }
+            # 答錯時，自動隨機換下一題（排除剛剛答錯的這題）
+            remaining_pool = [q for q in active_pool if q["id"] != q_data["id"]]
+            next_q = random.choice(remaining_pool).copy() if remaining_pool else random.choice(active_pool).copy()
+            next_q["cat"] = active_cat
+            u["current_q"] = next_q
+            st.rerun()
+
+# ==========================================
+# 4. 主畫面排版 (含特大飄揚大旗郵輪浮標)
+# ==========================================
+render_header_banner()
+
+if "nav_tab" not in st.session_state:
+    st.session_state.nav_tab = "🔥 戰況看板 & 群島海圖"
+
+# 右側隨身跟隨滑動的「巨型郵輪＋超大面長型飄揚旗幟寫【點我闖關】(21號大字)」懸浮浮標
+if st.session_state.nav_tab != "🎯 答題闖關入口":
+    st.markdown(
+        '<div class="floating-cruise-container">'
+        '<svg width="200" height="145" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">'
+        '<path d="M8 140C28 134 50 146 72 140C94 134 116 146 138 140C160 134 182 146 212 140" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>'
+        '<path d="M14 149C38 144 62 154 86 149C110 144 134 154 158 149C180 144 200 151 208 149" stroke="#0284c7" stroke-width="5" stroke-linecap="round"/>'
+        '<path d="M22 108L42 136C42 136 100 142 174 136L202 108H22Z" fill="#0f172a" stroke="#0369a1" stroke-width="2.5"/>'
+        '<path d="M24 108H200L194 114H31L24 108Z" fill="#ef4444"/>'
+        '<path d="M28 84H192L198 108H24L28 84Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5"/>'
+        '<circle cx="45" cy="96" r="4" fill="#0284c7"/><circle cx="63" cy="96" r="4" fill="#0284c7"/><circle cx="81" cy="96" r="4" fill="#0284c7"/>'
+        '<circle cx="99" cy="96" r="4" fill="#0284c7"/><circle cx="117" cy="96" r="4" fill="#0284c7"/><circle cx="135" cy="96" r="4" fill="#0284c7"/>'
+        '<circle cx="153" cy="96" r="4" fill="#0284c7"/><circle cx="171" cy="96" r="4" fill="#0284c7"/><circle cx="189" cy="96" r="4" fill="#0284c7"/>'
+        '<rect x="46" y="62" width="130" height="22" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>'
+        '<rect x="54" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/><rect x="71" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
+        '<rect x="88" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/><rect x="105" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
+        '<rect x="122" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/><rect x="139" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
+        '<rect x="156" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
+        '<rect x="66" y="44" width="84" height="18" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>'
+        '<rect x="76" y="48" width="13" height="9" rx="1" fill="#0284c7"/><rect x="96" y="48" width="13" height="9" rx="1" fill="#0284c7"/><rect x="116" y="48" width="13" height="9" rx="1" fill="#0284c7"/>'
+        '<path d="M78 28L80 44H90L88 28H78Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/><rect x="78" y="28" width="11" height="4" fill="#0f172a"/>'
+        '<path d="M112 28L114 44H124L122 28H112Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/><rect x="112" y="28" width="11" height="4" fill="#0f172a"/>'
+        '<line x1="32" y1="4" x2="32" y2="70" stroke="#b45309" stroke-width="4.5" stroke-linecap="round"/><circle cx="32" cy="5" r="4" fill="#fef08a"/>'
+        '<path d="M34 6 C80 1 120 14 170 8 C195 5 210 10 214 12 C206 24 214 36 210 48 C160 42 120 54 80 48 C55 52 40 48 34 50 Z" fill="#dc2626" stroke="#fef08a" stroke-width="3"/>'
+        '<text x="120" y="34" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="3">點我闖關</text>'
+        '</svg>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    
+    # 點擊感應層：覆蓋於巨型郵輪與大面旗幟上方，點擊瞬間直達闖關頁
+    if st.button(" ", key="floating_cruise_btn"):
+        st.session_state.nav_tab = "🎯 答題闖關入口"
+        st.rerun()
+
+selected_nav = st.radio(
+    "導覽選單",
+    options=["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"],
+    index=["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"].index(st.session_state.nav_tab),
+    horizontal=True,
+    label_visibility="collapsed"
+)
+st.session_state.nav_tab = selected_nav
+
+if selected_nav == "🔥 戰況看板 & 群島海圖":
+    render_live_leaderboard_auto()
+
+elif selected_nav == "🎯 答題闖關入口":
+    render_quiz_engine()
+
+elif selected_nav == "⚙️ 管理員劃島控制":
+    st.subheader("🛠️ 院所搶島與活動後台控制")
+    qualified_clinics = [c for c in GLOBAL_STATE["clinics"].values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
+    qualified_clinics = sorted(qualified_clinics, key=lambda x: x["qualified_at"] or datetime.datetime.max)
+    
+    if not qualified_clinics:
+        st.info("目前尚無院所達到 60% 門檻。")
+    else:
+        admin_c = st.selectbox("選擇操作院所：", options=qualified_clinics, format_func=lambda x: f"{x['name']} (順位達標時間: {x['qualified_at'].strftime('%H:%M:%S') if x['qualified_at'] else 'N/A'})")
+        available_islands = [k for k, v in GLOBAL_STATE["islands"].items() if v["status"] == "available"]
+        
+        if admin_c["selected_island"]:
+            st.success(f"該院所已成功佔領：{admin_c['selected_island']}")
+        elif not available_islands:
+            st.warning("所有群島已被佔領完畢！")
+        else:
+            target_island = st.selectbox("選擇要登陸的島嶼：", options=available_islands, format_func=lambda k: f"{GLOBAL_STATE['islands'][k]['name']} ({k})")
+            if st.button("確認鎖定並登島", key="btn_admin_lock"):
+                ok, msg = select_island_atomic(admin_c["name"], target_island)
+                if ok:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
