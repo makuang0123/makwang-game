@@ -4,7 +4,7 @@ import datetime
 import math
 
 # ==========================================
-# 0. 頁面配置與藍白渡假風 CSS (含手機 5x5 與右側船型懸浮按鈕)
+# 0. 頁面配置與藍白渡假風 CSS (含手機 5x5 與船型旗幟浮動標)
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -50,35 +50,50 @@ CUSTOM_CSS = """
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
-    /* 右側隨時滑動的船型浮標按鈕 (Sticky/Fixed Floating Sailboat) */
+    /* ⛵ 造型帆船浮動標 (視覺層) */
+    .floating-sailboat-container {
+        position: fixed !important;
+        right: 12px !important;
+        bottom: 82px !important;
+        width: 92px !important;
+        height: 92px !important;
+        z-index: 999990 !important;
+        pointer-events: none !important;
+        animation: floatSailboat 2.6s ease-in-out infinite alternate !important;
+        filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+    }
+    @keyframes floatSailboat {
+        0% { transform: translateY(0px) rotate(-4deg); }
+        50% { transform: translateY(-8px) rotate(3deg); }
+        100% { transform: translateY(0px) rotate(-4deg); }
+    }
+
+    /* 點擊感應層：透明按鈕完全覆蓋在帆船上 */
     .st-key-floating_boat_btn {
         position: fixed !important;
-        right: 14px !important;
-        bottom: 95px !important;
+        right: 12px !important;
+        bottom: 82px !important;
+        width: 92px !important;
+        height: 92px !important;
         z-index: 999999 !important;
     }
     .st-key-floating_boat_btn button {
-        width: 74px !important;
-        height: 74px !important;
+        width: 92px !important;
+        height: 92px !important;
         border-radius: 50% !important;
-        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
-        border: 3px solid #fef08a !important;
-        box-shadow: 0 8px 24px rgba(234, 88, 12, 0.6) !important;
-        color: #ffffff !important;
-        font-weight: 900 !important;
-        font-size: 0.85rem !important;
-        line-height: 1.25 !important;
-        padding: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        animation: floatSailboat 2.6s ease-in-out infinite alternate !important;
+        background: transparent !important;
+        border: none !important;
+        color: transparent !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
     }
-    @keyframes floatSailboat {
-        0% { transform: translateY(0px) rotate(-3deg); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45); }
-        50% { transform: translateY(-7px) rotate(3deg); box-shadow: 0 14px 28px rgba(234, 88, 12, 0.7); }
-        100% { transform: translateY(0px) rotate(-3deg); box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45); }
+    .st-key-floating_boat_btn button:hover, 
+    .st-key-floating_boat_btn button:active, 
+    .st-key-floating_boat_btn button:focus {
+        background: transparent !important;
+        border: none !important;
+        color: transparent !important;
+        box-shadow: none !important;
     }
 
     /* 手機 5x5 群島海圖專用自適應 Grid (手機一屏完整呈現) */
@@ -1305,7 +1320,6 @@ def render_island_5x5_grid_clean():
             else:
                 cards.append(f'<div class="island-grid-item island-available"><div class="island-title">🏝️ {isl["name"]}</div><div class="island-status-open">可搶登</div><div class="island-code">({code})</div></div>')
     
-    # 緊湊無縮排 HTML 輸出，避免任何 Markdown 解析為代碼區塊
     grid_html = f'<div class="island-5x5-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
@@ -1326,7 +1340,7 @@ def render_live_leaderboard_auto():
         st.markdown("""
         <div class="empty-state-box">
             ⛵ 全院艦隊整裝待發中！目前尚無同仁通關<br>
-            <span style="font-size:0.88rem; font-weight:normal; color:#475569;">點擊右側【⛵ 立即闖關】浮標，搶下第一張選島門票！</span>
+            <span style="font-size:0.88rem; font-weight:normal; color:#475569;">點擊右側【點我闖關】帆船浮標，搶下第一張選島門票！</span>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -1407,7 +1421,6 @@ def render_live_leaderboard_auto():
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
-    # 渲染 5x5 群島海圖
     render_island_5x5_grid_clean()
 
 def render_quiz_engine():
@@ -1580,16 +1593,36 @@ def render_quiz_engine():
             st.rerun()
 
 # ==========================================
-# 4. 主畫面排版 (導覽分頁與右側船型浮動按鈕)
+# 4. 主畫面排版 (含專屬造型帆船浮標)
 # ==========================================
 render_header_banner()
 
 if "nav_tab" not in st.session_state:
     st.session_state.nav_tab = "🔥 戰況看板 & 群島海圖"
 
-# 右側隨時跟隨滑動的船型浮動按鈕 (點擊立即跳轉作答)
+# 右側隨身跟隨滑動的「帆船造型＋旗幟寫【點我闖關】」懸浮浮標
 if st.session_state.nav_tab != "🎯 答題闖關入口":
-    if st.button("⛵\n立即\n闖關", key="floating_boat_btn"):
+    # 視覺層：精緻帆船 SVG 插畫，紅旗上醒目標示「點我闖關」
+    st.markdown("""
+    <div class="floating-sailboat-container">
+        <svg width="92" height="92" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 92C24 88 36 96 48 92C60 88 72 96 84 92C94 88 102 94 106 92" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+            <path d="M6 97C18 94 30 100 42 97C54 94 66 100 78 97C88 94 98 100 104 97" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+            <path d="M24 72L32 88C32 88 56 93 80 88L88 72H24Z" fill="#b45309" stroke="#78350f" stroke-width="2.5"/>
+            <path d="M28 75H84L80 83H32L28 75Z" fill="#d97706"/>
+            <circle cx="56" cy="80" r="3" fill="#fef08a"/>
+            <line x1="52" y1="8" x2="52" y2="72" stroke="#451a03" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M54 28L88 68H54V28Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+            <path d="M58 35L82 65H58V35Z" fill="#f0f9ff"/>
+            <path d="M50 32L20 68H50V32Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+            <path d="M52 8L106 18L52 28V8Z" fill="#dc2626" stroke="#fde047" stroke-width="1.8"/>
+            <text x="78" y="21.5" font-size="8.8" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="0.5">點我闖關</text>
+        </svg>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 點擊感應層：覆蓋於帆船上方，點擊瞬間直達闖關頁
+    if st.button(" ", key="floating_boat_btn"):
         st.session_state.nav_tab = "🎯 答題闖關入口"
         st.rerun()
 
