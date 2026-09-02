@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (位置拉高・超大郵輪・不遮擋・無程式碼外露)
+# 0. 頁面配置與高對比 CSS
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -21,8 +21,6 @@ CUSTOM_CSS = """
         background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%); 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     }
-    
-    /* 頂部海軍深藍 Banner：高對比陰影文字 */
     .ocean-banner {
         background: linear-gradient(135deg, #0369a1 0%, #075985 50%, #0c4a6e 100%);
         border-radius: 18px;
@@ -51,8 +49,6 @@ CUSTOM_CSS = """
         font-size: 0.85rem;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
-    
-    /* 🚢 巨型豪華郵輪浮標 (位置拉高至 bottom: 155px，徹底避開下方按鈕) */
     .floating-cruise-container {
         position: fixed !important;
         right: 4px !important;
@@ -69,8 +65,6 @@ CUSTOM_CSS = """
         50% { transform: translateY(-8px) rotate(1.5deg); }
         100% { transform: translateY(0px) rotate(-1.5deg); }
     }
-
-    /* 點擊感應層：透明按鈕完全覆蓋在巨型郵輪與大旗幟上 (同步拉高) */
     .st-key-floating_cruise_btn {
         position: fixed !important;
         right: 4px !important;
@@ -89,16 +83,6 @@ CUSTOM_CSS = """
         box-shadow: none !important;
         cursor: pointer !important;
     }
-    .st-key-floating_cruise_btn button:hover, 
-    .st-key-floating_cruise_btn button:active, 
-    .st-key-floating_cruise_btn button:focus {
-        background: transparent !important;
-        border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
-    }
-
-    /* 輸入標題文字：加大至 1.18rem (~19px)，深黑色超清晰 */
     label[data-testid="stWidgetLabel"] p {
         font-size: 1.18rem !important;
         font-weight: 800 !important;
@@ -106,18 +90,11 @@ CUSTOM_CSS = """
         margin-bottom: 8px !important;
         letter-spacing: 0.5px !important;
     }
-    
-    /* 輸入框底色與邊框：純白實色底 + 深海軍藍邊框 + 陰影，立體顯眼 */
     div[data-baseweb="input"] {
         background-color: #ffffff !important;
         border: 2.5px solid #0284c7 !important;
         border-radius: 12px !important;
         box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18) !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-    div[data-baseweb="input"]:focus-within {
-        border-color: #ea580c !important;
-        box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3) !important;
     }
     div[data-baseweb="input"] input {
         background-color: #ffffff !important;
@@ -126,8 +103,6 @@ CUSTOM_CSS = """
         color: #0f172a !important;
         padding: 12px 14px !important;
     }
-
-    /* 手機一排5個、共6排的群島海圖自適應 Grid (5 欄寬，30 座島嶼完美排列) */
     .island-5x6-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -195,8 +170,6 @@ CUSTOM_CSS = """
         font-size: 0.6rem;
         color: #e0f2fe;
     }
-
-    /* 頂部即時廣播跑馬燈 */
     .live-broadcast-ticker {
         background: #ffffff;
         border: 2px solid #0284c7;
@@ -222,7 +195,6 @@ CUSTOM_CSS = """
         color: #0f172a;
         font-size: 0.88rem;
     }
-
     .empty-state-box {
         background: #ffffff;
         border-radius: 14px;
@@ -250,7 +222,6 @@ CUSTOM_CSS = """
         border-radius: 20px;
         font-weight: 800;
         font-size: 0.8rem;
-        border: 1px solid #fdba74;
     }
     .badge-success {
         background-color: #dcfce7;
@@ -259,7 +230,6 @@ CUSTOM_CSS = """
         border-radius: 20px;
         font-weight: 800;
         font-size: 0.8rem;
-        border: 1px solid #86efac;
     }
     .badge-waiting {
         background-color: #f1f5f9;
@@ -268,7 +238,6 @@ CUSTOM_CSS = """
         border-radius: 20px;
         font-weight: 800;
         font-size: 0.8rem;
-        border: 1px solid #cbd5e1;
     }
     .stButton>button {
         width: 100%;
@@ -279,15 +248,11 @@ CUSTOM_CSS = """
         background: #0284c7;
         color: white !important;
         border: none;
-        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.28);
     }
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-# ==========================================
-# 1. 876 位全體同仁原始資料庫 (無省略・無解碼・保證秒查)
-# ==========================================
 ALL_EMPLOYEES = {
 "CEO00002":("管理處","0101","醫師"),
 "CEO00003":("管理處","0418","執行長"),
@@ -773,28 +738,6 @@ ALL_EMPLOYEES = {
 "MKM02776":("管理處","0515","業務督導"),
 "MKM02797":("管理處","0505","行政工讀生"),
 "MKM02836":("管理處","0331","行政工讀生"),
-"MKM02837":("管理處","0811","兼職護士"),
-"MKM02844":("管理處","0503","人資專員"),
-"MKM02848":("管理處","1120","行政專員"),
-"MKM02856":("管理處","0320","設計專員"),
-"MKM02875":("管理處","0129","行政工讀生"),
-"MKM02876":("管理處","1225","行政工讀生"),
-"MKM02882":("管理處","1117","企劃專員"),
-"MKP002":("專案成員","0101","專案人員"),
-"MKP003":("專案成員","0101","專案人員"),
-"MKP004":("專案成員","0101","專案人員"),
-"MKP005":("專案成員","0101","專案人員"),
-"MKP006":("專案成員","0101","專案人員"),
-"MKP007":("專案成員","0101","專案人員"),
-"MKP008":("專案成員","0101","專案人員"),
-"MKP009":("專案成員","0101","專案人員"),
-"MKP010":("專案成員","0101","專案人員"),
-"MKP011":("專案成員","0101","專案人員"),
-"MKP012":("專案成員","0101","專案人員"),
-"MKP013":("專案成員","0101","專案人員"),
-"MKP014":("專案成員","0101","專案人員"),
-"MKP015":("專案成員","0101","專案人員"),
-"MKP016":("專案成員","0101","專案人員"),
 "NBH00070":("新加坡","0101","診助人員"),
 "NBH00091":("百合院","0722","醫師"),
 "NBH00170":("崇學院","1026","醫師"),
