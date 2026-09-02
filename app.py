@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import datetime
 import math
+import random
+import os
 
 # ==========================================
 # 0. 頁面配置與高對比 CSS (位置拉高・超大郵輪・不遮擋・無程式碼外露)
@@ -1165,6 +1167,200 @@ ALL_EMPLOYEES = {
 "ZZH02877":("彰化院","1202","儲備診助人員")
 }
 
+# ==========================================
+# 1.1 官方題庫 (全 26 題完整內嵌)
+# ==========================================
+QUESTION_BANK = {
+    "family_day": [
+        {
+            "id": "FA01",
+            "q": "2026 馬光家庭日的主軸名稱為何？",
+            "options": ["A. 光芒萬丈", "B. 沐光嶼航", "C. 成風破浪"],
+            "ans": 1,
+            "exp": "今年主題為『沐光與航』，象徵大家如艦隊般齊心出航！"
+        },
+        {
+            "id": "FA02",
+            "q": "家庭日這次的歌唱大來賓是哪一位歌手?",
+            "options": ["A. 郭靜", "B. 王淨", "C. 梁靜茹"],
+            "ans": 0,
+            "exp": "今年的歌手是大家的童年回憶『郭靜』喔！"
+        },
+        {
+            "id": "FA03",
+            "q": "家庭日上哪一個選項\"不是\"會有的活動?",
+            "options": ["A. 闖關或手作", "B. 聽歌吃美食", "C. 睡覺"],
+            "ans": 2,
+            "exp": "可以聽歌、可以放鬆，這麼好的一天就不要睡了吧！"
+        },
+        {
+            "id": "FA04",
+            "q": "2026家庭日的地點位於高雄哪裡?",
+            "options": ["A. 高雄展覽館", "B. 高雄美術館", "C. 高雄技擊館"],
+            "ans": 0,
+            "exp": "今年家庭日的地點在高雄展覽館南館喔，不要跑錯囉！"
+        },
+        {
+            "id": "FA05",
+            "q": "2026家庭日於高雄展覽館南館舉辦，請問輕軌要搭乘到哪一站?",
+            "options": ["A. 軟體園區站", "B. 夢時代站", "C. 高雄展覽館站"],
+            "ans": 2,
+            "exp": "搭乘高雄輕軌至『高雄展覽館站』出站即可快速抵達！"
+        },
+        {
+            "id": "FA06",
+            "q": "2026年家庭日舉辦的日期為?",
+            "options": ["A. 2026-10-31", "B. 2026-11-01", "C. 2026-11-02"],
+            "ans": 1,
+            "exp": "2026家庭日將於 11 月 1 日（日）盛大舉行！"
+        },
+    ],
+    "ma_kwang": [
+        {
+            "id": "MA01",
+            "q": "請問馬光的第一家院所是哪個分院?",
+            "options": ["A. 屏東院", "B. 東港院", "C. 鳳山院"],
+            "ans": 1,
+            "exp": "1993年於屏東東港鎮開設「屏光院」（現為東港院）。"
+        },
+        {
+            "id": "MA02",
+            "q": "大哥近期出的新書名稱是?",
+            "options": ["A. 淬鍊成光", "B. 淬鍊成精", "C. 精益求精"],
+            "ans": 0,
+            "exp": "『淬鍊成光』講述馬光的歷史與成功背後的故事，各大書局都有賣喔，快來一睹中醫40年的菁華吧"
+        },
+        {
+            "id": "MA03",
+            "q": "馬光的發源地來自哪裡?",
+            "options": ["A. 綠島", "B. 澎湖", "C. 小琉球"],
+            "ans": 1,
+            "exp": "1991年於澎湖馬公市開設第一家中醫院所「馬光中醫」，亦為馬光醫療網第一家院所。"
+        },
+        {
+            "id": "MA04",
+            "q": "下列哪一個非馬光海外的據點",
+            "options": ["A. 新加坡", "B. 馬來西亞", "C. 英國"],
+            "ans": 2,
+            "exp": "1999年馬光中醫至新加坡、馬來西亞發展"
+        },
+        {
+            "id": "MA05",
+            "q": "馬光於2025年導入 AI 智慧中醫系統是甚麼?",
+            "options": ["A. 脈象儀", "B. 舌診儀", "C. 診斷儀"],
+            "ans": 1,
+            "exp": "2025年馬光與友達聯盟合作，導入 AI 智慧中醫系統—「舌診儀」"
+        },
+        {
+            "id": "MA06",
+            "q": "下列哪一個\"並非\"馬光的核心價值?",
+            "options": ["A. 誠實正直", "B. 照顧同事", "C. 堅持專業"],
+            "ans": 1,
+            "exp": "馬光的四大核心價值為『善待員工』、『照顧患者』、『堅持專業』、『誠實正直』，身為馬光人要熟記喔！"
+        },
+        {
+            "id": "MA07",
+            "q": "馬光中醫獨有的、專注於顧客服務的職位是?",
+            "options": ["A. CRM", "B. 診助人員", "C. 醫師"],
+            "ans": 0,
+            "exp": "中醫首創CRM顧客關係管理部門，這群擁有沉穩而親切氣質的小夥伴，穿梭於候診區與診間之間，為患者與醫護人員搭起溝通的橋梁，這群致力於提升服務品質，非常特別的職位就是『CRM』顧客管理專員"
+        },
+        {
+            "id": "MA08",
+            "q": "馬光三大企業文化是?",
+            "options": ["A. 正面力量", "B. 當責不讓", "C. 找好的人"],
+            "ans": 2,
+            "exp": "馬光的三大企業文化是『正面力量』、『當責不讓』、『找對的人』，一起成為最棒的馬光人！"
+        },
+        {
+            "id": "MA09",
+            "q": "馬光每一年尾牙都會播放的一首歌曲是?",
+            "options": ["A. 一定要成功", "B. 明天再擱來", "C. 明天會更好"],
+            "ans": 2,
+            "exp": "明天會更好行之有年，每一年都會由大哥領軍合唱，唱出馬光的期盼與美好的未來。"
+        },
+    ],
+    "policy": [
+        {
+            "id": "PO01",
+            "q": "依照內聯單【天然災害期間出勤交通補助暨天災出勤津貼】，請問若政府宣布颱風放假，有出勤上班的夥伴\"免附憑證\"的交通補助為多少元?",
+            "options": ["A. 300元", "B. 400元", "C. 500元"],
+            "ans": 1,
+            "exp": "颱風天配合營運出勤的夥伴，不論交通工具與距離，公司提供交通補助400元(免附憑證)，若居住地較遠的夥伴，可檢附相關交通憑證申請實際交通超過400元的部分"
+        },
+        {
+            "id": "PO02",
+            "q": "依照內聯單【天然災害期間出勤交通補助暨天災出勤津貼】之附件-天然災害(颱風)班別定義及人力編制原則，以下哪個配置人數有誤?",
+            "options": ["A. 醫師至少1名", "B. 前台2~4名", "C. 機動2名"],
+            "ans": 2,
+            "exp": "颱風班採取「維持必要醫療服務所需之基本人力」進行配置，因此不會再額外安排機動人力喔！"
+        },
+        {
+            "id": "PO03",
+            "q": "依照內聯單【醫療網員工離職通報及面談作業流程】，依照\"關懷原則\"以下敘述何者有誤?",
+            "options": ["A. 離職面談時應秉持尊重、同理、關懷及保密原則", "B. 不得以責備、威嚇、施壓或其他不當方式影響員工之離職決定", "C. 因員工已提出離職意向，中午訂餐可以忽略夥伴請他自己去外面用餐"],
+            "ans": 2,
+            "exp": "針對C選項，不得因員工提出離職意向或離職通知，而對員工為排擠、羞辱、威脅、不合理調整工作或其他不利對待。"
+        },
+        {
+            "id": "PO04",
+            "q": "依照內聯單【醫療網員工離職通報及面談作業流程】，當員工通報離職後，需進行哪些程序?",
+            "options": ["A. 進行面談", "B. 通報離職及工作交接", "C. 以上皆是"],
+            "ans": 2,
+            "exp": "當夥伴提出正式離職通知時，請依照離職流程進行相關手續，並留意時效"
+        },
+        {
+            "id": "PO05",
+            "q": "依照內聯單【考勤單據撤回申請表系統上線說明】，考勤單據撤回申請表這張表單之重要性何者有誤?",
+            "options": ["A. 提升行政效率，建立透明紀錄", "B. 多道溝通防線，資訊更加複雜", "C. 落實法規合規，保障雙方權益"],
+            "ans": 1,
+            "exp": "針對B選項，實際是簡化了跨單位與院所間的口頭傳達與確認流程，因此實際效益是\"簡化溝通審核讓資訊更即時同步\""
+        },
+        {
+            "id": "PO06",
+            "q": "依照內聯單【醫療網院所恢復院主管職務之通知及說明】，下列哪一項說明有誤?",
+            "options": ["A. 未來將朝向「院長」、「團隊」、「管理處」三方合作", "B. 院長與主管合作管理之主要職責為\"解決同仁和患者的問題及提升營運績效\"", "C. 欲報名主管的夥伴除了原擔任院主管的同仁可自行填寫外，其他夥伴亦可請院長推薦"],
+            "ans": 0,
+            "exp": "未來醫療網院所朝向三方合作：「院長」、「主管」、「管理處」；在馬光的核心價值、企業文化、制度系統之下，院所內部人事物由院長和院主管共同管理、管理處為監督及輔助角色"
+        },
+        {
+            "id": "PO07",
+            "q": "依照內聯單【115年度工時調整實施宣導公告】，醫療網定義的周工時下列哪一項說明有誤?",
+            "options": ["A. 每週工時40小時，包含基本工作時間、值班時間、會議時間、前置轉備(提前5分鐘上崗)及診後緩衝(下診後10分鐘內不申報加班)", "B. 如會議適逢休假，因會議時間已計入周工時內，可以要求夥伴參加，若無法參加亦必須事先請假", "C. 每週休假制度以每週休兩天(周日+週間一天)的休假模式進行安排，讓每位夥伴都能在每週獲得充分休息，避免長時間連續工作"],
+            "ans": 1,
+            "exp": "針對B選項，如會議適逢休假，夥伴可透過「補看」紀錄了解會亦內容與重點即可，且不需額外提前請假"
+        },
+        {
+            "id": "PO08",
+            "q": "依照內聯單【115年度工時調整實施宣導公告】，每週第幾次值班可以申報加班?",
+            "options": ["A. 第1次", "B. 第2次", "C. 第3次"],
+            "ans": 2,
+            "exp": "每週值班次數定為2次，當週若超過則可以申報加班，請於加班完成後主動填寫加班單"
+        },
+        {
+            "id": "PO09",
+            "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，以下何者非屬於公出之認定?",
+            "options": ["A. 會議及外部洽公", "B. 跨院所支援及行政作業", "C. 因個人需求外出購買飲料"],
+            "ans": 2,
+            "exp": "公出認定為同仁因接受指派或經團隊、主管核准，離開平日例行工作地點，前往其他院所、管理處、外部單位、會議地點、教育訓練地點或其他指定地點執行職務者，包括會議及外部洽公、跨院所支援及行政作業、教育訓練及內部認證考試及其他公務，若因個人因素或非上述類型則不屬於公出。"
+        },
+        {
+            "id": "PO10",
+            "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，交通工具使用原則何者有誤?",
+            "options": ["A. 跨縣市供出可依工作需求選擇高鐵、台鐵、客運、捷運等大眾運輸工具", "B. 市區短程移動建議優先選擇便利且具經濟效益之大眾運輸工具", "C. 攜帶大型物品、醫療相關備品、交通不便、豪雨、高溫、夜間安全或其他特殊原因，基於經濟效益考量最好還是自行騎車"],
+            "ans": 2,
+            "exp": "交通工具使用原則應依行程需求、工作效率及個人安全選擇適當交通方式，公司期待大家在順利完成任務的前提下，兼顧費用合理性與安全性。"
+        },
+        {
+            "id": "PO11",
+            "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，有關自行駕駛交通工具補助標準何者有誤?",
+            "options": ["A. 同仁因公務需要，應三人以上共乘，含駕駛人", "B. 若未符合上述自駕的條件，同縣市移動每公里補助3元", "C. 申請時需於公出旅費報告表填寫起訖地點及公里數，並提供Google地圖路線資料，以利核對與快速辦理"],
+            "ans": 0,
+            "exp": "針對A選項，二人以上共乘即可，含駕駛人"
+        },
+    ],
+}
+
 CLINIC_TARGETS = {
     '屏東院': 56, '管理處': 54, '信義院': 53, '彰化院': 40, '陽明院': 38,
     '崇學院': 35, '明華院': 34, '東港院': 32, '東霖院': 32, '鳳山院': 31,
@@ -1292,7 +1488,7 @@ def reset_user_session():
         "emp_id": "",
         "clinic_name": "",
         "progress": {"family_day": False, "ma_kwang": False, "policy": False},
-        "current_q_idx": 0,
+        "current_q": None,
         "wrong_feedback": None
     }
 
@@ -1314,7 +1510,32 @@ def render_island_5x5_grid_clean():
         <h4 style="margin:0; color:#0369a1; font-weight:800;">🗺️ 室內渡假群島配置海圖 (5×5)</h4>
         <span style="font-size:0.75rem; color:#64748b;">一屏完整呈現</span>
     </div>
-    <div style='text-align: center; color: #0284c7; font-weight: 800; font-size:0.8rem; margin: 4px 0;'>🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊</div>
+    <div style="text-align: center; margin: 12px 0 6px 0;">
+        <svg width="100%" height="48" viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 360px; margin: 0 auto; display: block;">
+            <polygon points="40,2 10,42 90,42" fill="url(#spotlight1)" opacity="0.45"/>
+            <polygon points="280,2 230,42 310,42" fill="url(#spotlight2)" opacity="0.45"/>
+            <polygon points="160,2 110,42 210,42" fill="url(#spotlightCenter)" opacity="0.5"/>
+            <rect x="25" y="2" width="270" height="4" rx="2" fill="#334155"/>
+            <circle cx="50" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <circle cx="110" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <circle cx="160" cy="4" r="4" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>
+            <circle cx="210" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <circle cx="270" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+            <path d="M40 34 L70 24 L250 24 L280 34 L270 44 L50 44 Z" fill="url(#stageWood)" stroke="#b45309" stroke-width="1.5"/>
+            <path d="M50 42 L270 42 L268 46 L52 46 Z" fill="#fef08a"/>
+            <rect x="158" y="16" width="4" height="12" rx="1" fill="#94a3b8"/>
+            <circle cx="160" cy="14" r="3" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+            <defs>
+                <linearGradient id="spotlight1" x1="40" y1="2" x2="50" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#fef08a" stop-opacity="0.8"/><stop offset="1" stop-color="#fef08a" stop-opacity="0"/></linearGradient>
+                <linearGradient id="spotlight2" x1="280" y1="2" x2="270" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#fef08a" stop-opacity="0.8"/><stop offset="1" stop-color="#fef08a" stop-opacity="0"/></linearGradient>
+                <linearGradient id="spotlightCenter" x1="160" y1="2" x2="160" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8" stop-opacity="0.9"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></linearGradient>
+                <linearGradient id="stageWood" x1="40" y1="24" x2="280" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#d97706"/><stop offset="0.5" stop-color="#b45309"/><stop offset="1" stop-color="#92400e"/></linearGradient>
+            </defs>
+        </svg>
+        <div style="font-size: 1.18rem; font-weight: 900; color: #0284c7; letter-spacing: 1.5px; text-shadow: 0 1px 3px rgba(2,132,199,0.25); margin-top: 5px; margin-bottom: 8px;">
+            🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊
+        </div>
+    </div>
     """, unsafe_allow_html=True)
     
     cards = []
@@ -1502,90 +1723,48 @@ def render_quiz_engine():
             st.rerun()
         return
 
-    # 答題引擎
-    questions = {
-        "family_day": [
-            {
-                "id": "F01",
-                "q": "⛵ 2026 馬光家庭日的主軸名稱為何？",
-                "options": ["A. 光芒萬丈", "B. 沐光與航", "C. 同心協力", "D. 乘風破浪"],
-                "ans": 1,
-                "exp": "今年主題為『沐光與航』，象徵大家如艦隊般齊心出航！"
-            },
-            {
-                "id": "F02",
-                "q": "🏝️ 2026/11/01(日) 馬光家庭日的舉辦地點在哪裡？",
-                "options": ["A. 高雄流行音樂中心", "B. 高雄巨蛋", "C. 高雄展覽館南館＋室外草坪", "D. 駁二特區"],
-                "ans": 2,
-                "exp": "活動包下高雄展覽館南館渡假室內區與海景草坪！"
-            }
-        ],
-        "ma_kwang": [
-            {
-                "id": "M01",
-                "q": "⚓ 馬光醫療體系的核心理念不包含下列何者？",
-                "options": ["A. 專業誠信", "B. 視病猶親", "C. 利潤至上", "D. 團隊協作"],
-                "ans": 2,
-                "exp": "馬光始終以同仁與患者的幸福健康為最高準則。"
-            },
-            {
-                "id": "M02",
-                "q": "🏥 馬光中醫首創推動的『一人一診室』主要目的是？",
-                "options": ["A. 增加裝潢費用", "B. 守護隱私與維持極致問診品質", "C. 醫師休息室", "D. 放置更多儀器"],
-                "ans": 1,
-                "exp": "提供患者安心放鬆且完全獨立的問診環境！"
-            }
-        ],
-        "policy": [
-            {
-                "id": "P01",
-                "q": "📑 依最新通報指引，同仁若遇異常事件應於多久內登錄系統？",
-                "options": ["A. 24小時內", "B. 3天內", "C. 一週內", "D. 月底結算"],
-                "ans": 0,
-                "exp": "24小時內通報能讓跨部門及時提供後援支援！"
-            },
-            {
-                "id": "P02",
-                "q": "🎓 關於同仁外部進修補助政策，常規每年度可申請幾次補助？",
-                "options": ["A. 1次", "B. 2次", "C. 3次", "D. 原則每年2次，專案另計"],
-                "ans": 3,
-                "exp": "鼓勵同仁自主進修，每年常規提供 2 次額度支援。"
-            }
-        ]
-    }
-
     p_col1, p_col2, p_col3 = st.columns(3)
     p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
-    p_col2.metric("② 馬光好精神", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
+    p_col2.metric("② 馬光知識王", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
     p_col3.metric("③ 重點新政策", "✅ 通關" if u["progress"]["policy"] else "⬜ 挑戰中")
 
     if not u["progress"]["family_day"]:
         active_cat = "family_day"
-        cat_title = "關卡一：沐光家庭日知多少 🌴"
+        cat_title = "關卡一：沐光家庭日知多少 🌴 (隨機抽題)"
     elif not u["progress"]["ma_kwang"]:
         active_cat = "ma_kwang"
-        cat_title = "關卡二：馬光醫療網文化通 ⚓"
+        cat_title = "關卡二：馬光知識王文化通 ⚓ (隨機抽題)"
     else:
         active_cat = "policy"
-        cat_title = "關卡三：近期政策與實務規範 📑"
+        cat_title = "關卡三：近期重點新政策 📑 (隨機抽題)"
 
     st.markdown(f"### 📍 當前航線：{cat_title}")
-    
-    q_list = questions[active_cat]
-    q_data = q_list[u["current_q_idx"] % len(q_list)]
+
+    active_pool = QUESTION_BANK[active_cat]
+    if u.get("current_q") is None or u.get("current_q", {}).get("cat") != active_cat:
+        q_pick = random.choice(active_pool).copy()
+        q_pick["cat"] = active_cat
+        u["current_q"] = q_pick
+
+    q_data = u["current_q"]
 
     st.markdown(f"**題目：{q_data['q']}**")
-    selected_option = st.radio("請選擇正確答案：", range(len(q_data["options"])), format_func=lambda i: q_data["options"][i], key=f"q_{active_cat}_{u['current_q_idx']}")
+    selected_option = st.radio(
+        "請選擇正確答案：", 
+        range(len(q_data["options"])), 
+        format_func=lambda i: q_data["options"][i], 
+        key=f"q_{active_cat}_{q_data['id']}"
+    )
 
-    if u["wrong_feedback"]:
+    if u.get("wrong_feedback"):
         st.error(f"❌ 答錯囉！{u['wrong_feedback']['msg']}")
-        st.info(f"💡 **解析叮嚀**：{u['wrong_feedback']['exp']}")
+        st.info(f"💡 **解析叮嚀**：{u['wrong_feedback']['exp']}\\n\\n*(系統已為您隨機更換下一題，請繼續挑戰！)*")
 
     if st.button("送出答案", type="primary", key="btn_submit_ans"):
         if selected_option == q_data["ans"]:
             u["progress"][active_cat] = True
             u["wrong_feedback"] = None
-            u["current_q_idx"] = 0
+            u["current_q"] = None
             
             if all(u["progress"].values()):
                 success, msg = record_user_completion(u["emp_id"], u["clinic_name"])
@@ -1593,10 +1772,14 @@ def render_quiz_engine():
             st.rerun()
         else:
             u["wrong_feedback"] = {
-                "msg": f"正確答案是：{q_data['options'][q_data['ans']]}",
+                "msg": f"上一題題目是「{q_data['q']}」，正確答案是：{q_data['options'][q_data['ans']]}",
                 "exp": q_data["exp"]
             }
-            u["current_q_idx"] += 1
+            # 答錯時，自動隨機換下一題（排除剛剛答錯的這題）
+            remaining_pool = [q for q in active_pool if q["id"] != q_data["id"]]
+            next_q = random.choice(remaining_pool).copy() if remaining_pool else random.choice(active_pool).copy()
+            next_q["cat"] = active_cat
+            u["current_q"] = next_q
             st.rerun()
 
 # ==========================================
@@ -1609,7 +1792,6 @@ if "nav_tab" not in st.session_state:
 
 # 右側隨身跟隨滑動的「巨型郵輪＋超大面長型飄揚旗幟寫【點我闖關】(21號大字)」懸浮浮標
 if st.session_state.nav_tab != "🎯 答題闖關入口":
-    # 緊湊單行 HTML，完全避免多餘縮排導致 Markdown 解析成代碼區塊
     st.markdown(
         '<div class="floating-cruise-container">'
         '<svg width="200" height="145" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">'
