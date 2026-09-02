@@ -4,7 +4,7 @@ import datetime
 import math
 
 # ==========================================
-# 0. 頁面配置與藍白渡假風 CSS (含巨型郵輪浮標與旗幟 16 號大字)
+# 0. 頁面配置與高對比 CSS (巨型郵輪浮標・20號字旗幟・超清晰輸入框)
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -50,37 +50,37 @@ CUSTOM_CSS = """
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
-    /* 🚢 豪華郵輪造型浮動標 (視覺層) */
+    /* 🚢 巨型豪華郵輪浮標 (視覺層：寬度 185px，波浪微幅擺動) */
     .floating-cruise-container {
         position: fixed !important;
-        right: 8px !important;
-        bottom: 70px !important;
-        width: 150px !important;
-        height: 115px !important;
+        right: 6px !important;
+        bottom: 60px !important;
+        width: 185px !important;
+        height: 140px !important;
         z-index: 999990 !important;
         pointer-events: none !important;
         animation: floatCruise 3s ease-in-out infinite alternate !important;
-        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
+        filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
     }
     @keyframes floatCruise {
         0% { transform: translateY(0px) rotate(-1.5deg); }
-        50% { transform: translateY(-7px) rotate(1.5deg); }
+        50% { transform: translateY(-8px) rotate(1.5deg); }
         100% { transform: translateY(0px) rotate(-1.5deg); }
     }
 
-    /* 點擊感應層：透明大按鈕完全覆蓋在豪華郵輪上 */
+    /* 點擊感應層：透明大按鈕完全覆蓋在巨型郵輪上 */
     .st-key-floating_cruise_btn {
         position: fixed !important;
-        right: 8px !important;
-        bottom: 70px !important;
-        width: 150px !important;
-        height: 115px !important;
+        right: 6px !important;
+        bottom: 60px !important;
+        width: 185px !important;
+        height: 140px !important;
         z-index: 999999 !important;
     }
     .st-key-floating_cruise_btn button {
-        width: 150px !important;
-        height: 115px !important;
-        border-radius: 18px !important;
+        width: 185px !important;
+        height: 140px !important;
+        border-radius: 24px !important;
         background: transparent !important;
         border: none !important;
         color: transparent !important;
@@ -94,6 +94,35 @@ CUSTOM_CSS = """
         border: none !important;
         color: transparent !important;
         box-shadow: none !important;
+    }
+
+    /* 輸入標題文字：加大至 1.18rem (~19px)，深黑色超清晰 */
+    label[data-testid="stWidgetLabel"] p {
+        font-size: 1.18rem !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
+        margin-bottom: 8px !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    /* 輸入框底色與邊框：純白實色底 + 深海軍藍邊框 + 陰影，立體顯眼 */
+    div[data-baseweb="input"] {
+        background-color: #ffffff !important;
+        border: 2.5px solid #0284c7 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    div[data-baseweb="input"]:focus-within {
+        border-color: #ea580c !important;
+        box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3) !important;
+    }
+    div[data-baseweb="input"] input {
+        background-color: #ffffff !important;
+        font-size: 1.15rem !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        padding: 12px 14px !important;
     }
 
     /* 手機 5x5 群島海圖專用自適應 Grid (手機一屏完整呈現) */
@@ -244,7 +273,7 @@ CUSTOM_CSS = """
         border-radius: 10px;
         height: 3.2em;
         font-weight: 800;
-        font-size: 1.02rem;
+        font-size: 1.05rem;
         background: #0284c7;
         color: white !important;
         border: none;
@@ -1578,49 +1607,49 @@ render_header_banner()
 if "nav_tab" not in st.session_state:
     st.session_state.nav_tab = "🔥 戰況看板 & 群島海圖"
 
-# 右側隨身跟隨滑動的「豪華郵輪造型＋大旗幟寫【點我闖關】(16號大字)」懸浮浮標
+# 右側隨身跟隨滑動的「豪華郵輪造型＋大旗幟寫【點我闖關】(20號大字)」懸浮浮標
 if st.session_state.nav_tab != "🎯 答題闖關入口":
-    # 視覺層：氣派雙煙囪豪華郵輪 SVG，頂端大紅旗幟標示清晰 16pt「點我闖關」
     st.markdown("""
     <div class="floating-cruise-container">
-        <svg width="150" height="115" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 105C20 100 36 110 52 105C68 100 84 110 100 105C116 100 132 110 156 105" stroke="#38bdf8" stroke-width="6" stroke-linecap="round"/>
-            <path d="M10 112C28 108 46 116 64 112C82 108 100 116 118 112C134 108 146 114 152 112" stroke="#0284c7" stroke-width="4" stroke-linecap="round"/>
-            <path d="M16 80L32 102C32 102 75 106 128 102L150 80H16Z" fill="#0f172a" stroke="#0369a1" stroke-width="2"/>
-            <path d="M18 80H148L143 85H23L18 80Z" fill="#ef4444"/>
-            <path d="M22 62H142L146 80H18L22 62Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-            <circle cx="34" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="48" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="62" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="76" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="90" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="104" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="118" cy="71" r="3" fill="#0284c7"/>
-            <circle cx="132" cy="71" r="3" fill="#0284c7"/>
-            <rect x="34" y="46" width="94" height="16" rx="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.8"/>
-            <rect x="40" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="52" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="64" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="76" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="88" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="100" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="112" y="50" width="7" height="8" rx="1" fill="#38bdf8"/>
-            <rect x="50" y="34" width="60" height="12" rx="2" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
-            <rect x="55" y="37" width="10" height="6" fill="#0284c7"/>
-            <rect x="70" y="37" width="10" height="6" fill="#0284c7"/>
-            <rect x="85" y="37" width="10" height="6" fill="#0284c7"/>
-            <path d="M60 22L62 34H70L68 22H60Z" fill="#ea580c" stroke="#9a3412" stroke-width="1.5"/>
-            <rect x="60" y="22" width="9" height="3" fill="#0f172a"/>
-            <path d="M84 22L86 34H94L92 22H84Z" fill="#ea580c" stroke="#9a3412" stroke-width="1.5"/>
-            <rect x="84" y="22" width="9" height="3" fill="#0f172a"/>
-            <line x1="38" y1="6" x2="38" y2="46" stroke="#475569" stroke-width="3" stroke-linecap="round"/>
-            <path d="M38 6L156 16L38 34V6Z" fill="#dc2626" stroke="#fef08a" stroke-width="2.5"/>
-            <text x="96" y="24" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="1">點我闖關</text>
+        <svg width="185" height="140" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 132C24 126 44 138 64 132C84 126 104 138 124 132C144 126 164 138 194 132" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <path d="M12 141C34 136 56 146 78 141C100 136 122 146 144 141C164 136 182 143 190 141" stroke="#0284c7" stroke-width="5" stroke-linecap="round"/>
+            <path d="M20 102L38 128C38 128 92 134 160 128L186 102H20Z" fill="#0f172a" stroke="#0369a1" stroke-width="2.5"/>
+            <path d="M22 102H184L178 108H28L22 102Z" fill="#ef4444"/>
+            <path d="M26 80H176L182 102H22L26 80Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5"/>
+            <circle cx="42" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="58" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="74" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="90" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="106" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="122" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="138" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="154" cy="91" r="3.8" fill="#0284c7"/>
+            <circle cx="170" cy="91" r="3.8" fill="#0284c7"/>
+            <rect x="42" y="60" width="118" height="20" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+            <rect x="50" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="65" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="80" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="95" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="110" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="125" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="140" y="65" width="9" height="10" rx="1.5" fill="#38bdf8"/>
+            <rect x="60" y="44" width="76" height="16" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+            <rect x="68" y="48" width="12" height="8" rx="1" fill="#0284c7"/>
+            <rect x="86" y="48" width="12" height="8" rx="1" fill="#0284c7"/>
+            <rect x="104" y="48" width="12" height="8" rx="1" fill="#0284c7"/>
+            <path d="M72 28L74 44H84L82 28H72Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/>
+            <rect x="72" y="28" width="11" height="4" fill="#0f172a"/>
+            <path d="M102 28L104 44H114L112 28H102Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/>
+            <rect x="102" y="28" width="11" height="4" fill="#0f172a"/>
+            <line x1="46" y1="6" x2="46" y2="60" stroke="#475569" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M46 6L196 20L46 44V6Z" fill="#dc2626" stroke="#fef08a" stroke-width="3.5"/>
+            <text x="122" y="30.5" font-size="20" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="1.5">點我闖關</text>
         </svg>
     </div>
     """, unsafe_allow_html=True)
     
-    # 點擊感應層：覆蓋於郵輪與大旗幟上方，點擊立即直達闖關頁
+    # 點擊感應層：覆蓋於巨型郵輪與大旗幟上方，點擊立即直達闖關頁
     if st.button(" ", key="floating_cruise_btn"):
         st.session_state.nav_tab = "🎯 答題闖關入口"
         st.rerun()
