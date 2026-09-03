@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (導覽放大・醒目凸顯・完整封包)
+# 0. 頁面配置與高對比 CSS (導覽放大・題目文字放大1.5倍)
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -112,6 +112,22 @@ CUSTOM_CSS = """
     div[data-baseweb="radio"] div:nth-child(2) label {
         color: #ffffff !important;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 🧠 闖關題目文字放大 1.5 倍 */
+    .quiz-question-text {
+        font-size: 1.72rem !important;
+        font-weight: 900 !important;
+        color: #0f172a !important;
+        line-height: 1.4 !important;
+        margin-bottom: 14px !important;
+    }
+
+    /* 🔘 闖關選項文字放大 1.5 倍 (針對 st.radio 內部文字) */
+    div[data-baseweb="radio"] label p, div[data-testid="stRadio"] label span {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+        color: #1e293b !important;
     }
 
     /* 🚢 巨型豪華郵輪浮標 (純視覺動畫) */
@@ -1845,7 +1861,9 @@ def render_quiz_engine():
 
     q_data = u["current_q"]
 
-    st.markdown(f"**題目：{q_data['q']}**")
+    # 題目文字放大 1.5 倍 (使用自訂 CSS 樣式)
+    st.markdown(f'<div class="quiz-question-text">題目：{q_data["q"]}</div>', unsafe_allow_html=True)
+    
     selected_option = st.radio(
         "請選擇正確答案：", 
         range(len(q_data["options"])), 
