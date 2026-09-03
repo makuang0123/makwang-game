@@ -1643,8 +1643,8 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊 (每 3 秒輪播排行榜 5 筆)
-@st.fragment(run_every=3)
+# 局域自動刷新區塊 (每 5 秒輪播排行榜 5 筆)
+@st.fragment(run_every=5)
 def render_live_leaderboard_auto():
     st.markdown(f"""
     <div class="live-broadcast-ticker">
