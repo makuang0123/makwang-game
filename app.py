@@ -1540,7 +1540,7 @@ def render_rules_section():
             <b>1. 身分驗證：</b>請輸入您的<b>員工編號</b>與<b>4碼生日密碼</b>（例：5月20日請輸入 0520）登入系統。<br>
             <b>2. 三大關卡挑戰：</b>依序完成「沐光家庭日」、「馬光知識王」與「近期重點新政策」挑戰。<br>
             <b>3. 戰力累積辦法：</b>每位同仁通關成功即可為所屬院所／單位增加 <b>1 點登島戰力</b>。<br>
-            <b>4. 優先選島獎勵：</b>當院所通關人數達到目標人數之 <b>60%（過半門檻）</b>時，即可取得優先選島資格，依達標時間先後順序於海圖上插旗佔領專屬黃金席位！
+            <b>4. 優先選島獎勵：</b>當院所通關人數達到目標人數之 <b>60%（過半門檻）</b>時，即可取得優先選島資格，依達標時間先後順序於海圖上插旗佔領專屬黃金席位！(註：這個黃金席位是家庭日當天各院專屬的實際座位區喔！)
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1615,7 +1615,7 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊
+# 局域自動刷新區塊 (每 3 秒輪播排行榜 5 筆)
 @st.fragment(run_every=3)
 def render_live_leaderboard_auto():
     st.markdown(f"""
@@ -1626,7 +1626,7 @@ def render_live_leaderboard_auto():
     """, unsafe_allow_html=True)
 
     ranked_stats = get_ranked_active_stats()
-    st.subheader("🔥 領航先鋒榜 (TOP 5)")
+    st.subheader("🔥 領航先鋒榜")
     
     if not ranked_stats:
         st.markdown("""
@@ -1636,19 +1636,35 @@ def render_live_leaderboard_auto():
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 3 秒自動同步）")
+        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 3 秒自動輪播 5 間院所）")
+        
+        # 輪播邏輯：利用 st.session_state 紀錄目前輪播的頁數索引
+        if "leaderboard_page" not in st.session_state:
+            st.session_state.leaderboard_page = 0
+        
+        total_items = len(ranked_stats)
+        page_size = 5
+        max_pages = math.ceil(total_items / page_size) if total_items > 0 else 1
+        
+        # 每次自動切換下一頁
+        st.session_state.leaderboard_page = (st.session_state.leaderboard_page + 1) % max_pages
+        current_page = st.session_state.leaderboard_page
+        
+        start_idx = current_page * page_size
+        end_idx = min(start_idx + page_size, total_items)
+        current_batch = ranked_stats[start_idx:end_idx]
+        
         rank_emojis = ["🥇", "🥈", "🥉", "⭐", "⭐"]
-        top_5 = ranked_stats[:5]
 
-        for idx, s in enumerate(top_5):
-            rank = idx + 1
-            icon = rank_emojis[idx] if idx < len(rank_emojis) else "⭐"
+        for idx, s in enumerate(current_batch):
+            absolute_rank = start_idx + idx + 1
+            icon = rank_emojis[absolute_rank - 1] if absolute_rank <= len(rank_emojis) else "⭐"
             with st.container():
                 col1, col2, col3 = st.columns([2, 3, 2])
                 with col1:
-                    st.markdown(f"**{icon} #{rank} {s['name']}**")
+                    st.markdown(f"**{icon} #{absolute_rank} {s['name']}**")
                     if s["is_qualified"]:
-                        st.markdown(f"<span class='badge-success'>🏆 第 {rank} 順位達標</span>", unsafe_allow_html=True)
+                        st.markdown(f"<span class='badge-success'>🏆 第 {absolute_rank} 順位達標</span>", unsafe_allow_html=True)
                     else:
                         st.markdown(f"<span class='badge-urgent'>🔥 還差 {s['diff']} 人！</span>", unsafe_allow_html=True)
                 with col2:
@@ -1663,6 +1679,8 @@ def render_live_leaderboard_auto():
                     else:
                         st.markdown("🌊 **全速航行中**")
             st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
+        
+        st.caption(f"目前顯示第 {current_page + 1} 頁 / 共 {max_pages} 頁（每 3 秒自動更新）")
 
     st.markdown("---")
     st.subheader("🔍 查詢自家院所即時戰況")
@@ -1902,29 +1920,50 @@ elif selected_nav == "🎯 答題闖關入口":
     render_quiz_engine()
 elif selected_nav == "⚙️ 管理員劃島控制":
     st.subheader("🛠️ 院所搶島與活動後台控制")
-    qualified_clinics = [c for c in GLOBAL_STATE["clinics"].values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
-    qualified_clinics = sorted(qualified_clinics, key=lambda x: x["qualified_at"] or datetime.datetime.max)
     
-    if not qualified_clinics:
-        st.info("目前尚無院所達到 60% 門檻。")
+    # 登入驗證機制
+    if "admin_logged_in" not in st.session_state:
+        st.session_state.admin_logged_in = False
+
+    if not st.session_state.admin_logged_in:
+        st.markdown("##### 🔐 管理員權限驗證")
+        ad_acc = st.text_input("管理員帳號", key="admin_acc_input")
+        ad_pwd = st.text_input("管理員密碼", type="password", key="admin_pwd_input")
+        if st.button("登入管理後台", key="btn_admin_login"):
+            if ad_acc == "HR1101" and ad_pwd == "1151101":
+                st.session_state.admin_logged_in = True
+                st.success("登入成功！")
+                st.rerun()
+            else:
+                st.error("帳號或密碼錯誤！")
     else:
-        admin_c = st.selectbox("選擇操作院所：", options=qualified_clinics, format_func=lambda x: f"{x['name']} (順位達標時間: {x['qualified_at'].strftime('%H:%M:%S') if x['qualified_at'] else 'N/A'})")
-        available_islands = [k for k, v in GLOBAL_STATE["islands"].items() if v["status"] == "available"]
+        if st.button("登出管理員", key="btn_admin_logout"):
+            st.session_state.admin_logged_in = False
+            st.rerun()
+            
+        qualified_clinics = [c for c in GLOBAL_STATE["clinics"].values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
+        qualified_clinics = sorted(qualified_clinics, key=lambda x: x["qualified_at"] or datetime.datetime.max)
         
-        if admin_c["selected_island"]:
-            st.success(f"該院所已成功佔領：{admin_c['selected_island']}")
-        elif not available_islands:
-            st.warning("所有群島已被佔領完畢！")
+        if not qualified_clinics:
+            st.info("目前尚無院所達到 60% 門檻。")
         else:
-            target_island = st.selectbox("選擇要登陸的島嶼：", options=available_islands, format_func=lambda k: f"{GLOBAL_STATE['islands'][k]['name']} ({k})")
-            if st.button("確認鎖定並登島", key="btn_admin_lock"):
-                ok, msg = select_island_atomic(admin_c["name"], target_island)
-                if ok:
-                    st.success(msg)
-                    st.rerun()
-                else:
-                    st.error(msg)
-                    
+            admin_c = st.selectbox("選擇操作院所：", options=qualified_clinics, format_func=lambda x: f"{x['name']} (順位達標時間: {x['qualified_at'].strftime('%H:%M:%S') if x['qualified_at'] else 'N/A'})")
+            available_islands = [k for k, v in GLOBAL_STATE["islands"].items() if v["status"] == "available"]
+            
+            if admin_c["selected_island"]:
+                st.success(f"該院所已成功佔領：{admin_c['selected_island']}")
+            elif not available_islands:
+                st.warning("所有群島已被佔領完畢！")
+            else:
+                target_island = st.selectbox("選擇要登陸的島嶼：", options=available_islands, format_func=lambda k: f"{GLOBAL_STATE['islands'][k]['name']} ({k})")
+                if st.button("確認鎖定並登島", key="btn_admin_lock"):
+                    ok, msg = select_island_atomic(admin_c["name"], target_island)
+                    if ok:
+                        st.success(msg)
+                        st.rerun()
+                    else:
+                        st.error(msg)
+                        
     st.markdown("---")
     st.subheader("📋 闖關完成名單查詢與下載")
     records = GLOBAL_STATE["completion_records"]
