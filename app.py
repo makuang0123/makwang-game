@@ -6,10 +6,10 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (導覽放大・題目文字放大1.5倍)
+# 0. 頁面配置與高對比 CSS (導覽放大・題目改色・選項放大1.2倍)
 # ==========================================
 st.set_page_config(
-    page_title="沐光與航｜群島搶位大挑戰",
+    page_title="沐光嶼航｜群島搶位大挑戰",
     page_icon="⛵",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -114,18 +114,18 @@ CUSTOM_CSS = """
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    /* 🧠 闖關題目文字放大 1.5 倍 */
+    /* 🧠 闖關題目文字放大 1.5 倍並更改為醒目的深藍紫色 (#1e3a8a) */
     .quiz-question-text {
         font-size: 1.72rem !important;
         font-weight: 900 !important;
-        color: #0f172a !important;
+        color: #1e3a8a !important;
         line-height: 1.4 !important;
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 闖關選項文字放大 1.5 倍 (針對 st.radio 內部文字) */
+    /* 🔘 闖關選項文字放大 1.2 倍 (針對 st.radio 內部文字) */
     div[data-baseweb="radio"] label p, div[data-testid="stRadio"] label span {
-        font-size: 1.45rem !important;
+        font-size: 1.25rem !important;
         font-weight: 800 !important;
         color: #1e293b !important;
     }
@@ -1389,7 +1389,7 @@ QUESTION_BANK = {
         {
             "id": "PO10",
             "q": "依照內聯單【員工公出暨差旅辦法及公出費用申請說明】，交通工具使用原則何者有誤?",
-            "options": ["A. 跨縣市供出可依工作需求選擇高鐵、台鐵、客運、捷運等大眾運輸工具", "B. 市區短程移動建議優先選擇便利且具經濟效益之大眾運輸工具", "C. 攜帶大型物品、醫療相關備品、交通不便、豪雨、高溫、夜間安全或其他特殊原因，基於經濟效益考量最好還是自行騎車"],
+            "options": ["A. 跨縣市供出可依工作需求選擇高鐵, 台鐵、客運、捷運等大眾運輸工具", "B. 市區短程移動建議優先選擇便利且具經濟效益之大眾運輸工具", "C. 攜帶大型物品、醫療相關備品、交通不便、豪雨、高溫、夜間安全或其他特殊原因，基於經濟效益考量最好還是自行騎車"],
             "ans": 2,
             "exp": "交通工具使用原則應依行程需求、工作效率及個人安全選擇適當交通方式，公司期待大家在順利完成任務的前提下，兼顧費用合理性與安全性。"
         },
@@ -1643,8 +1643,8 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊 (每 5 秒輪播排行榜 5 筆)
-@st.fragment(run_every=5)
+# 局域自動刷新區塊 (每 3 秒輪播排行榜 5 筆)
+@st.fragment(run_every=3)
 def render_live_leaderboard_auto():
     st.markdown(f"""
     <div class="live-broadcast-ticker">
@@ -1861,7 +1861,7 @@ def render_quiz_engine():
 
     q_data = u["current_q"]
 
-    # 題目文字放大 1.5 倍 (使用自訂 CSS 樣式)
+    # 題目文字放大 1.5 倍並使用自訂深藍紫色 #1e3a8a
     st.markdown(f'<div class="quiz-question-text">題目：{q_data["q"]}</div>', unsafe_allow_html=True)
     
     selected_option = st.radio(
