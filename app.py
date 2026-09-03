@@ -1464,7 +1464,9 @@ def get_ranked_active_stats():
     active_stats = [s for s in all_stats if s["completed"] > 0]
     qualified = sorted([s for s in active_stats if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
     unqualified = sorted([s for s in active_stats if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
-    return qualified + unqualified
+    # 將未有任何通關數的院所也補在後面，確保所有院所都能在排行榜查詢到自己排名
+    inactive = [s for s in all_stats if s["completed"] == 0]
+    return qualified + unqualified + inactive
 
 def record_user_completion(employee_id, clinic_name, title_name):
     if employee_id in GLOBAL_STATE["completed_employees"]:
@@ -1540,7 +1542,8 @@ def render_rules_section():
             <b>1. 身分驗證：</b>請輸入您的<b>員工編號</b>與<b>4碼生日密碼</b>（例：5月20日請輸入 0520）登入系統。<br>
             <b>2. 三大關卡挑戰：</b>依序完成「沐光家庭日」、「馬光知識王」與「近期重點新政策」挑戰。<br>
             <b>3. 戰力累積辦法：</b>每位同仁通關成功即可為所屬院所／單位增加 <b>1 點登島戰力</b>。<br>
-            <b>4. 優先選島獎勵：</b>當院所通關人數達到目標人數之 <b>60%（過半門檻）</b>時，即可取得優先選島資格，依達標時間先後順序於海圖上插旗佔領專屬黃金席位！(註：這個黃金席位是家庭日當天各院專屬的實際座位區喔！)
+            <b>4. 優先選島獎勵：</b>當院所通關人數達到目標人數之 <b>60%（過半門檻）</b>時，即可取得優先選島資格，依達標時間先後順序於海圖上插旗佔領專屬黃金席位！<br>
+            <span style="color: #ea580c; font-weight: 900;">🔥 重要：這個黃金席位是家庭日當天各院專屬的實際座位區喔！</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -1638,7 +1641,6 @@ def render_live_leaderboard_auto():
     else:
         st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 3 秒自動輪播 5 間院所）")
         
-        # 輪播邏輯：利用 st.session_state 紀錄目前輪播的頁數索引
         if "leaderboard_page" not in st.session_state:
             st.session_state.leaderboard_page = 0
         
@@ -1646,7 +1648,6 @@ def render_live_leaderboard_auto():
         page_size = 5
         max_pages = math.ceil(total_items / page_size) if total_items > 0 else 1
         
-        # 每次自動切換下一頁
         st.session_state.leaderboard_page = (st.session_state.leaderboard_page + 1) % max_pages
         current_page = st.session_state.leaderboard_page
         
@@ -1695,7 +1696,7 @@ def render_live_leaderboard_auto():
     if selected_cname:
         my_rank = next((i + 1 for i, s in enumerate(ranked_stats) if s["name"] == selected_cname), None)
         my_s = get_clinic_stats(selected_cname)
-        rank_text = f"第 #{my_rank} 名" if my_rank is not None else "尚無排名 (待首位同仁通關啟航)"
+        rank_text = f"第 #{my_rank} 名" if my_rank is not None else "尚無排名"
         
         st.markdown(f"""
         <div class="my-clinic-box">
@@ -1921,12 +1922,12 @@ elif selected_nav == "🎯 答題闖關入口":
 elif selected_nav == "⚙️ 管理員劃島控制":
     st.subheader("🛠️ 院所搶島與活動後台控制")
     
-    # 登入驗證機制
+    # 共同管理員登入驗證機制（保護劃島控制與名單查詢下載）
     if "admin_logged_in" not in st.session_state:
         st.session_state.admin_logged_in = False
 
     if not st.session_state.admin_logged_in:
-        st.markdown("##### 🔐 管理員權限驗證")
+        st.markdown("##### 🔐 管理員權限驗證 (請輸入帳密以解鎖後台管理與通關名單)")
         ad_acc = st.text_input("管理員帳號", key="admin_acc_input")
         ad_pwd = st.text_input("管理員密碼", type="password", key="admin_pwd_input")
         if st.button("登入管理後台", key="btn_admin_login"):
@@ -1964,20 +1965,20 @@ elif selected_nav == "⚙️ 管理員劃島控制":
                     else:
                         st.error(msg)
                         
-    st.markdown("---")
-    st.subheader("📋 闖關完成名單查詢與下載")
-    records = GLOBAL_STATE["completion_records"]
-    if not records:
-        st.info("目前尚無同仁完成通關。")
-    else:
-        df_records = pd.DataFrame(records)
-        st.dataframe(df_records, use_container_width=True)
-        
-        csv_data = df_records.to_csv(index=False).encode('utf-8-sig')
-        st.download_button(
-            label="📥 下載通關名單 CSV",
-            data=csv_data,
-            file_name=f"ma_kwang_completion_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            key="btn_download_csv"
-        )
+        st.markdown("---")
+        st.subheader("📋 闖關完成名單查詢與下載")
+        records = GLOBAL_STATE["completion_records"]
+        if not records:
+            st.info("目前尚無同仁完成通關。")
+        else:
+            df_records = pd.DataFrame(records)
+            st.dataframe(df_records, use_container_width=True)
+            
+            csv_data = df_records.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 下載通關名單 CSV",
+                data=csv_data,
+                file_name=f"ma_kwang_completion_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                key="btn_download_csv"
+            )
