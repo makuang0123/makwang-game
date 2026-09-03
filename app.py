@@ -1643,7 +1643,7 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊 (每 5 秒輪播排行榜 5 筆)
+# 局域自動刷新區塊 (每 5 秒自動輪播排行榜 5 筆)
 @st.fragment(run_every=5)
 def render_live_leaderboard_auto():
     st.markdown(f"""
@@ -1673,8 +1673,8 @@ def render_live_leaderboard_auto():
         page_size = 5
         max_pages = math.ceil(total_items / page_size) if total_items > 0 else 1
         
-        st.session_state.leaderboard_page = (st.session_state.leaderboard_page + 1) % max_pages
-        current_page = st.session_state.leaderboard_page
+        # 確保頁數初始化或切換安全
+        current_page = st.session_state.leaderboard_page % max_pages
         
         start_idx = current_page * page_size
         end_idx = min(start_idx + page_size, total_items)
@@ -1707,6 +1707,9 @@ def render_live_leaderboard_auto():
             st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
         
         st.caption(f"目前顯示第 {current_page + 1} 頁 / 共 {max_pages} 頁（每 5 秒自動更新）")
+        
+        # 5秒計時結束後自動推進到下一頁
+        st.session_state.leaderboard_page = (current_page + 1) % max_pages
 
     st.markdown("---")
     st.subheader("🔍 查詢自家院所即時戰況")
@@ -1928,6 +1931,7 @@ if st.session_state.nav_tab != "🎯 答題闖關入口":
     )
     if st.button(" ", key="floating_cruise_btn"):
         st.session_state.nav_tab = "🎯 答題闖關入口"
+        st.session_state.leaderboard_page = 0  # 點擊浮標跳轉時也重置
         st.rerun()
 
 nav_options = ["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"]
@@ -1939,7 +1943,7 @@ selected_nav = st.radio(
     label_visibility="collapsed"
 )
 
-# 每次切換回「🔥 戰況看板 & 群島海圖」頁面時，將輪播頁數重設為第一頁 (索引 0)
+# 每次切換導覽頁面時，若選到「🔥 戰況看板 & 群島海圖」，強制將頁碼歸零，確保每次返回都是從第一頁開始
 if selected_nav != st.session_state.nav_tab:
     if selected_nav == "🔥 戰況看板 & 群島海圖":
         st.session_state.leaderboard_page = 0
