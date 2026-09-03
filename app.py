@@ -127,8 +127,8 @@ CUSTOM_CSS = """
         padding: 12px 14px !important;
     }
 
-    /* 手機 5x5 群島海圖專用自適應 Grid (手機一屏完整呈現) */
-    .island-5x5-grid {
+    /* 一排5個、共6排的群島海圖自適應 Grid (5 欄寬，30 座島嶼完美排列) */
+    .island-5x6-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 5px;
@@ -770,7 +770,7 @@ ALL_EMPLOYEES = {
 "MKM02713":("管理處","1116","專員"),
 "MKM02714":("管理處","0603","專員"),
 "MKM02728":("管理處","0314","主任"),
-"MKM02776":("管理處","0515","業務督導"),
+"MKM02776":("管理處","0515","業務導導"),
 "MKM02797":("管理處","0505","行政工讀生"),
 "MKM02836":("管理處","0331","行政工讀生"),
 "NBH00070":("新加坡","0101","診助人員"),
@@ -1371,7 +1371,7 @@ CLINIC_TARGETS = {
 }
 
 # ==========================================
-# 2. 全域持久化狀態 (跨使用者即時廣播)
+# 2. 全域持久化狀態 (一排5個・共6排・共30座群島)
 # ==========================================
 @st.cache_resource
 def get_global_game_state():
@@ -1393,10 +1393,11 @@ def get_global_game_state():
         "晴空島", "海鷗島", "海星島", "珍珠島", "沐光島",
         "碧波島", "逐浪島", "金沙島", "揚帆島", "晨光島",
         "星月島", "海螺島", "向陽島", "海嵐島", "琉璃島",
-        "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島"
+        "天際島", "悠遊島", "綠洲島", "航向島", "榮耀島",
+        "鯨浪島", "貝殼島", "暖陽島", "曙光島", "領航島"
     ]
     idx = 0
-    for r in range(1, 6):
+    for r in range(1, 7):
         for c in range(1, 6):
             code = f"R{r}-{c}"
             name = island_themes[idx]
@@ -1489,57 +1490,114 @@ def reset_user_session():
         "clinic_name": "",
         "progress": {"family_day": False, "ma_kwang": False, "policy": False},
         "current_q": None,
-        "wrong_feedback": None
+        "wrong_feedback": None,
+        "show_next_btn": False
     }
 
 # ==========================================
-# 3. 視覺組件 (乾淨 HTML 渲染 5x5 與戰況)
+# 3. 視覺組件 (真實金屬舞台・海洋藍台面・一排5個共6排海圖)
 # ==========================================
 def render_header_banner():
     st.markdown("""
     <div class="ocean-banner">
         <div style="font-size: 0.95rem; letter-spacing: 1px; color: #bae6fd; font-weight:700;">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
         <div class="banner-title">⛵ 沐光與航・群島搶位戰</div>
-        <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 海景草坪</div>
+        <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 室外草坪</div>
     </div>
     """, unsafe_allow_html=True)
 
-def render_island_5x5_grid_clean():
+def render_island_grid_clean():
     st.markdown("""
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-        <h4 style="margin:0; color:#0369a1; font-weight:800;">🗺️ 室內渡假群島配置海圖 (5×5)</h4>
-        <span style="font-size:0.75rem; color:#64748b;">一屏完整呈現</span>
+        <h4 style="margin:0; color:#0369a1; font-weight:800;">🗺️ 室內渡假群島配置海圖</h4>
+        <span style="font-size:0.75rem; color:#64748b;">一排5個・共6排（共30座島嶼）</span>
     </div>
-    <div style="text-align: center; margin: 12px 0 6px 0;">
-        <svg width="100%" height="48" viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 360px; margin: 0 auto; display: block;">
-            <polygon points="40,2 10,42 90,42" fill="url(#spotlight1)" opacity="0.45"/>
-            <polygon points="280,2 230,42 310,42" fill="url(#spotlight2)" opacity="0.45"/>
-            <polygon points="160,2 110,42 210,42" fill="url(#spotlightCenter)" opacity="0.5"/>
-            <rect x="25" y="2" width="270" height="4" rx="2" fill="#334155"/>
-            <circle cx="50" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
-            <circle cx="110" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
-            <circle cx="160" cy="4" r="4" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>
-            <circle cx="210" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
-            <circle cx="270" cy="4" r="3.5" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
-            <path d="M40 34 L70 24 L250 24 L280 34 L270 44 L50 44 Z" fill="url(#stageWood)" stroke="#b45309" stroke-width="1.5"/>
-            <path d="M50 42 L270 42 L268 46 L52 46 Z" fill="#fef08a"/>
-            <rect x="158" y="16" width="4" height="12" rx="1" fill="#94a3b8"/>
-            <circle cx="160" cy="14" r="3" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+    <div style="text-align: center; margin: 14px auto 8px auto; max-width: 580px; width: 100%;">
+        <svg width="100%" height="auto" viewBox="0 0 540 248" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; filter: drop-shadow(0 10px 22px rgba(2, 132, 199, 0.28));">
             <defs>
-                <linearGradient id="spotlight1" x1="40" y1="2" x2="50" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#fef08a" stop-opacity="0.8"/><stop offset="1" stop-color="#fef08a" stop-opacity="0"/></linearGradient>
-                <linearGradient id="spotlight2" x1="280" y1="2" x2="270" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#fef08a" stop-opacity="0.8"/><stop offset="1" stop-color="#fef08a" stop-opacity="0"/></linearGradient>
-                <linearGradient id="spotlightCenter" x1="160" y1="2" x2="160" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#38bdf8" stop-opacity="0.9"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></linearGradient>
-                <linearGradient id="stageWood" x1="40" y1="24" x2="280" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#d97706"/><stop offset="0.5" stop-color="#b45309"/><stop offset="1" stop-color="#92400e"/></linearGradient>
+                <linearGradient id="stageOceanBase" x1="270" y1="165" x2="270" y2="235" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#0284c7"/>
+                    <stop offset="40%" stop-color="#0369a1"/>
+                    <stop offset="100%" stop-color="#075985"/>
+                </linearGradient>
+                <linearGradient id="stageTopPlatform" x1="50" y1="164" x2="490" y2="195" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#38bdf8"/>
+                    <stop offset="50%" stop-color="#e0f2fe"/>
+                    <stop offset="100%" stop-color="#38bdf8"/>
+                </linearGradient>
+                <linearGradient id="trussMetal" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#94a3b8"/>
+                    <stop offset="50%" stop-color="#cbd5e1"/>
+                    <stop offset="100%" stop-color="#64748b"/>
+                </linearGradient>
+                <linearGradient id="screenBg" x1="270" y1="63" x2="270" y2="160" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#bae6fd"/>
+                    <stop offset="60%" stop-color="#e0f2fe"/>
+                    <stop offset="100%" stop-color="#6ee7b7"/>
+                </linearGradient>
+                <linearGradient id="spotBeam" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#fef08a" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+                </linearGradient>
             </defs>
+            <polygon points="120,48 40,180 180,180" fill="url(#spotBeam)"/>
+            <polygon points="420,48 360,180 500,180" fill="url(#spotBeam)"/>
+            <polygon points="270,48 180,180 360,180" fill="url(#spotBeam)"/>
+            <rect x="92" y="60" width="356" height="102" rx="3" fill="#0f172a"/>
+            <rect x="95" y="63" width="350" height="96" rx="2" fill="url(#screenBg)"/>
+            <path d="M95 138 C140 128 200 145 260 135 C320 125 380 140 445 132 L445 159 L95 159 Z" fill="#38bdf8" opacity="0.6"/>
+            <path d="M95 145 C160 138 240 150 330 142 C380 138 420 146 445 144 L445 159 L95 159 Z" fill="#0284c7" opacity="0.4"/>
+            <path d="M95 125 C130 110 165 130 200 122 C235 115 270 128 305 120 C340 114 380 125 445 116 L445 159 L95 159 Z" fill="#86efac" opacity="0.45"/>
+            <path d="M112 144 L138 90 L138 144 Z" fill="#ffffff" stroke="#0284c7" stroke-width="1.2"/>
+            <path d="M141 102 L160 144 L141 144 Z" fill="#fde047" stroke="#ca8a04" stroke-width="1.2"/>
+            <path d="M106 144 C120 144 152 144 165 144 L158 152 C140 153 125 153 113 152 Z" fill="#0369a1"/>
+            <path d="M420 156 Q415 132 405 120" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M405 120 Q390 115 385 125 M405 120 Q410 108 422 110 M405 120 Q425 122 422 130" stroke="#15803d" stroke-width="2" stroke-linecap="round"/>
+            <rect x="180" y="70" width="180" height="28" rx="14" fill="#ffffff" opacity="0.9" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
+            <text x="270" y="89" font-size="18" font-weight="900" fill="#0369a1" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="2">⛵ 沐光與航 ⛵</text>
+            <rect x="200" y="102" width="140" height="13" rx="6.5" fill="#fef08a"/>
+            <text x="270" y="112" font-size="8.5" font-weight="900" fill="#854d0e" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="0.5">2026/11/01 (日) 馬光家庭日</text>
+            <rect x="60" y="18" width="420" height="18" fill="none" stroke="url(#trussMetal)" stroke-width="2.5"/>
+            <line x1="60" y1="27" x2="480" y2="27" stroke="url(#trussMetal)" stroke-width="1.2"/>
+            <path d="M60 18 L70 36 L80 18 L90 36 L100 18 L110 36 L120 18 L130 36 L140 18 L150 36 L160 18 L170 36 L180 18 L190 36 L200 18 L210 36 L220 18 L230 36 L240 18 L250 36 L260 18 L270 36 L280 18 L290 36 L300 18 L310 36 L320 18 L330 36 L340 18 L350 36 L360 18 L370 36 L380 18 L390 36 L400 18 L410 36 L420 18 L430 36 L440 18 L450 36 L460 18 L470 36 L480 18" stroke="url(#trussMetal)" stroke-width="1.2"/>
+            <rect x="62" y="36" width="18" height="152" fill="none" stroke="url(#trussMetal)" stroke-width="2"/>
+            <line x1="71" y1="36" x2="71" y2="188" stroke="url(#trussMetal)" stroke-width="1"/>
+            <path d="M62 40 L80 55 L62 70 L80 85 L62 100 L80 115 L62 130 L80 145 L62 160 L80 175 L62 188" stroke="url(#trussMetal)" stroke-width="1.1"/>
+            <rect x="56" y="188" width="30" height="6" rx="2" fill="#475569"/>
+            <rect x="460" y="36" width="18" height="152" fill="none" stroke="url(#trussMetal)" stroke-width="2"/>
+            <line x1="469" y1="36" x2="469" y2="188" stroke="url(#trussMetal)" stroke-width="1"/>
+            <path d="M460 40 L478 55 L460 70 L478 85 L460 100 L478 115 L460 130 L478 145 L460 160 L478 175 L460 188" stroke="url(#trussMetal)" stroke-width="1.1"/>
+            <rect x="454" y="188" width="30" height="6" rx="2" fill="#475569"/>
+            <g fill="#0f172a" stroke="#334155" stroke-width="1">
+                <rect x="90" y="38" width="8" height="10" rx="1.5"/><circle cx="94" cy="49" r="3" fill="#fef08a"/>
+                <rect x="120" y="38" width="8" height="10" rx="1.5"/><circle cx="124" cy="49" r="3" fill="#fef08a"/>
+                <rect x="150" y="38" width="8" height="10" rx="1.5"/><circle cx="154" cy="49" r="3" fill="#fde047"/>
+                <rect x="180" y="38" width="8" height="10" rx="1.5"/><circle cx="184" cy="49" r="3" fill="#38bdf8"/>
+                <rect x="210" y="38" width="8" height="10" rx="1.5"/><circle cx="214" cy="49" r="3" fill="#fef08a"/>
+                <rect x="240" y="38" width="8" height="10" rx="1.5"/><circle cx="244" cy="49" r="3" fill="#38bdf8"/>
+                <rect x="270" y="38" width="8" height="10" rx="1.5"/><circle cx="274" cy="49" r="3" fill="#fef08a"/>
+                <rect x="300" y="38" width="8" height="10" rx="1.5"/><circle cx="304" cy="49" r="3" fill="#38bdf8"/>
+                <rect x="330" y="38" width="8" height="10" rx="1.5"/><circle cx="334" cy="49" r="3" fill="#fef08a"/>
+                <rect x="360" y="38" width="8" height="10" rx="1.5"/><circle cx="364" cy="49" r="3" fill="#fde047"/>
+                <rect x="390" y="38" width="8" height="10" rx="1.5"/><circle cx="394" cy="49" r="3" fill="#fef08a"/>
+                <rect x="420" y="38" width="8" height="10" rx="1.5"/><circle cx="424" cy="49" r="3" fill="#fef08a"/>
+            </g>
+            <polygon points="50,195 95,164 445,164 490,195" fill="url(#stageTopPlatform)" stroke="#0284c7" stroke-width="1.5"/>
+            <rect x="50" y="195" width="440" height="36" fill="url(#stageOceanBase)" rx="2"/>
+            <line x1="50" y1="195" x2="490" y2="195" stroke="#fde047" stroke-width="3"/>
+            <line x1="50" y1="231" x2="490" y2="231" stroke="#0369a1" stroke-width="2"/>
+            <rect x="220" y="200" width="100" height="10" rx="1" fill="#0369a1" stroke="#38bdf8" stroke-width="1"/>
+            <rect x="210" y="210" width="120" height="10" rx="1" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
+            <rect x="200" y="220" width="140" height="11" rx="1" fill="#075985" stroke="#38bdf8" stroke-width="1"/>
         </svg>
-        <div style="font-size: 1.18rem; font-weight: 900; color: #0284c7; letter-spacing: 1.5px; text-shadow: 0 1px 3px rgba(2,132,199,0.25); margin-top: 5px; margin-bottom: 8px;">
+        <div style="font-size: 1.25rem; font-weight: 900; color: #0369a1; letter-spacing: 2px; text-shadow: 0 1px 4px rgba(2,132,199,0.28); margin-top: 6px; margin-bottom: 8px;">
             🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     cards = []
-    for r in range(1, 6):
+    for r in range(1, 7):
         for c in range(1, 6):
             code = f"R{r}-{c}"
             isl = GLOBAL_STATE["islands"][code]
@@ -1548,7 +1606,7 @@ def render_island_5x5_grid_clean():
             else:
                 cards.append(f'<div class="island-grid-item island-available"><div class="island-title">🏝️ {isl["name"]}</div><div class="island-status-open">可搶登</div><div class="island-code">({code})</div></div>')
     
-    grid_html = f'<div class="island-5x5-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
+    grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
 # 局域自動刷新區塊 (每 3 秒自動輪詢最新戰報與海圖)
@@ -1649,7 +1707,7 @@ def render_live_leaderboard_auto():
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
-    render_island_5x5_grid_clean()
+    render_island_grid_clean()
 
 def render_quiz_engine():
     if "user" not in st.session_state:
@@ -1723,6 +1781,7 @@ def render_quiz_engine():
             st.rerun()
         return
 
+    # 三大關卡進度條 (更新為 馬光知識王)
     p_col1, p_col2, p_col3 = st.columns(3)
     p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
     p_col2.metric("② 馬光知識王", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
@@ -1745,6 +1804,8 @@ def render_quiz_engine():
         q_pick = random.choice(active_pool).copy()
         q_pick["cat"] = active_cat
         u["current_q"] = q_pick
+        u["show_next_btn"] = False
+        u["wrong_feedback"] = None
 
     q_data = u["current_q"]
 
@@ -1758,29 +1819,36 @@ def render_quiz_engine():
 
     if u.get("wrong_feedback"):
         st.error(f"❌ 答錯囉！{u['wrong_feedback']['msg']}")
-        st.info(f"💡 **解析叮嚀**：{u['wrong_feedback']['exp']}\\n\\n*(系統已為您隨機更換下一題，請繼續挑戰！)*")
+        st.info(f"💡 **解析叮嚀**：{u['wrong_feedback']['exp']}")
 
-    if st.button("送出答案", type="primary", key="btn_submit_ans"):
-        if selected_option == q_data["ans"]:
-            u["progress"][active_cat] = True
+    if u.get("show_next_btn"):
+        if st.button("💡 我已看懂解析，挑戰下一題", type="primary", key="btn_next_random_q"):
             u["wrong_feedback"] = None
-            u["current_q"] = None
-            
-            if all(u["progress"].values()):
-                success, msg = record_user_completion(u["emp_id"], u["clinic_name"])
-                st.balloons()
-            st.rerun()
-        else:
-            u["wrong_feedback"] = {
-                "msg": f"上一題題目是「{q_data['q']}」，正確答案是：{q_data['options'][q_data['ans']]}",
-                "exp": q_data["exp"]
-            }
-            # 答錯時，自動隨機換下一題（排除剛剛答錯的這題）
+            u["show_next_btn"] = False
             remaining_pool = [q for q in active_pool if q["id"] != q_data["id"]]
             next_q = random.choice(remaining_pool).copy() if remaining_pool else random.choice(active_pool).copy()
             next_q["cat"] = active_cat
             u["current_q"] = next_q
             st.rerun()
+    else:
+        if st.button("送出答案", type="primary", key="btn_submit_ans"):
+            if selected_option == q_data["ans"]:
+                u["progress"][active_cat] = True
+                u["wrong_feedback"] = None
+                u["show_next_btn"] = False
+                u["current_q"] = None
+                
+                if all(u["progress"].values()):
+                    success, msg = record_user_completion(u["emp_id"], u["clinic_name"])
+                    st.balloons()
+                st.rerun()
+            else:
+                u["wrong_feedback"] = {
+                    "msg": f"正確答案是：{q_data['options'][q_data['ans']]}",
+                    "exp": q_data["exp"]
+                }
+                u["show_next_btn"] = True
+                st.rerun()
 
 # ==========================================
 # 4. 主畫面排版 (含特大飄揚大旗郵輪浮標)
