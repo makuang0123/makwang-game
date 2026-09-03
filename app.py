@@ -30,7 +30,7 @@ CUSTOM_CSS = """
         color: #ffffff;
         text-align: center;
         box-shadow: 0 10px 20px -3px rgba(3, 105, 161, 0.4);
-        border: 2px solid #38bdf8;
+        border: 2.5px solid #38bdf8;
         margin-bottom: 14px;
     }
     .banner-title {
@@ -50,6 +50,15 @@ CUSTOM_CSS = """
         font-weight: 900;
         font-size: 0.85rem;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        margin-bottom: 8px;
+    }
+    .banner-subtitle {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #e0f2fe;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        margin-top: 4px;
     }
     
     /* 📜 遊戲規則與獎勵說明區塊 */
@@ -1464,7 +1473,6 @@ def get_ranked_active_stats():
     active_stats = [s for s in all_stats if s["completed"] > 0]
     qualified = sorted([s for s in active_stats if s["is_qualified"]], key=lambda x: x["qualified_at"] or datetime.datetime.max)
     unqualified = sorted([s for s in active_stats if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
-    # 將未有任何通關數的院所也補在後面，確保所有院所都能在排行榜查詢到自己排名
     inactive = [s for s in all_stats if s["completed"] == 0]
     return qualified + unqualified + inactive
 
@@ -1531,6 +1539,7 @@ def render_header_banner():
         <div style="font-size: 0.95rem; letter-spacing: 1px; color: #bae6fd; font-weight:700;">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
         <div class="banner-title">⛵ 沐光與航・群島搶位戰</div>
         <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 室外草坪</div>
+        <div class="banner-subtitle">《院所搶位戰，邀請院所夥伴來答題通關，搶下院所專屬寶位》</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1922,7 +1931,7 @@ elif selected_nav == "🎯 答題闖關入口":
 elif selected_nav == "⚙️ 管理員劃島控制":
     st.subheader("🛠️ 院所搶島與活動後台控制")
     
-    # 共同管理員登入驗證機制（保護劃島控制與名單查詢下載）
+    # 共同管理員登入驗證機制（全面保護劃島控制與名單查詢下載）
     if "admin_logged_in" not in st.session_state:
         st.session_state.admin_logged_in = False
 
@@ -1979,6 +1988,6 @@ elif selected_nav == "⚙️ 管理員劃島控制":
                 label="📥 下載通關名單 CSV",
                 data=csv_data,
                 file_name=f"ma_kwang_completion_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv",
+                mime="text/css",
                 key="btn_download_csv"
             )
