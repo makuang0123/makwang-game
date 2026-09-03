@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (導覽放大・選項字體調整為 16px)
+# 0. 頁面配置與高對比 CSS (導覽放大・選項字體為 16px)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -123,7 +123,7 @@ CUSTOM_CSS = """
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 闖關選項文字調整為 16px (1rem / 16px 標準) */
+    /* 🔘 闖關選項文字調整為 16px */
     div[data-baseweb="radio"] label p, div[data-testid="stRadio"] label span {
         font-size: 16px !important;
         font-weight: 700 !important;
@@ -1565,7 +1565,7 @@ def render_rules_section():
         <div class="rules-title">📜 遊戲規則與獎勵說明</div>
         <div class="rules-content">
             <b>1. 身分驗證：</b>請輸入您的<b>員工編號</b>與<b>4碼生日密碼</b>（例：5月20日請輸入 0520）登入系統。<br>
-            <b>2. 三大關卡挑戰：</b>依序完成「沐光家庭日」、「馬光知識王」與「近期重點新政策」挑戰。<br>
+            <b>2. 三大關卡挑戰：</b>依序完成「沐光家庭日」、「馬光知識王」與<b>近期重點新政策</b>挑戰。<br>
             <b>3. 戰力累積辦法：</b>每位同仁通關成功即可為所屬院所／單位增加 <b>1 點登島戰力</b>。<br>
             <b>4. 優先選島獎勵：</b>當院所通關人數達到目標人數之 <b>60%（過半門檻）</b>時，即可取得優先選島資格，依達標時間先後順序於海圖上插旗佔領專屬黃金席位！<br>
             <span style="color: #ea580c; font-weight: 900;">🔥 重要：這個黃金席位是家庭日當天各院專屬的實際座位區喔！</span>
@@ -1643,8 +1643,8 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊 (每 3 秒輪播排行榜 5 筆)
-@st.fragment(run_every=3)
+# 局域自動刷新區塊 (每 5 秒輪播排行榜 5 筆)
+@st.fragment(run_every=5)
 def render_live_leaderboard_auto():
     st.markdown(f"""
     <div class="live-broadcast-ticker">
@@ -1664,7 +1664,7 @@ def render_live_leaderboard_auto():
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 3 秒自動輪播 5 間院所）")
+        st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 5 秒自動輪播 5 間院所）")
         
         if "leaderboard_page" not in st.session_state:
             st.session_state.leaderboard_page = 0
@@ -1706,7 +1706,7 @@ def render_live_leaderboard_auto():
                         st.markdown("🌊 **全速航行中**")
             st.markdown("<div style='margin-bottom: 4px;'></div>", unsafe_allow_html=True)
         
-        st.caption(f"目前顯示第 {current_page + 1} 頁 / 共 {max_pages} 頁（每 3 秒自動更新）")
+        st.caption(f"目前顯示第 {current_page + 1} 頁 / 共 {max_pages} 頁（每 5 秒自動更新）")
 
     st.markdown("---")
     st.subheader("🔍 查詢自家院所即時戰況")
@@ -1938,6 +1938,12 @@ selected_nav = st.radio(
     horizontal=True,
     label_visibility="collapsed"
 )
+
+# 每次切換回「🔥 戰況看板 & 群島海圖」頁面時，將輪播頁數重設為第一頁 (索引 0)
+if selected_nav != st.session_state.nav_tab:
+    if selected_nav == "🔥 戰況看板 & 群島海圖":
+        st.session_state.leaderboard_page = 0
+
 st.session_state.nav_tab = selected_nav
 
 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
