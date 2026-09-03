@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (選項文字放大至 1.5 倍)
+# 0. 頁面配置與高對比 CSS (導覽放大・選項字體調整為 16px)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -114,7 +114,7 @@ CUSTOM_CSS = """
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    /* 🧠 闖關題目文字放大 1.5 倍並更改為醒目的深藍紫色 (#1e3a8a) */
+    /* 🧠 闖關題目文字放大且顏色改為醒目的深藍紫色 (#1e3a8a) */
     .quiz-question-text {
         font-size: 1.72rem !important;
         font-weight: 900 !important;
@@ -123,10 +123,10 @@ CUSTOM_CSS = """
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 闖關選項文字放大至 1.5 倍 (與題目同比例放大) */
+    /* 🔘 闖關選項文字調整為 16px (1rem / 16px 標準) */
     div[data-baseweb="radio"] label p, div[data-testid="stRadio"] label span {
-        font-size: 1.55rem !important;
-        font-weight: 800 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
         color: #1e293b !important;
     }
 
