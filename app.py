@@ -1203,7 +1203,7 @@ QUESTION_BANK = {
             "q": "2026 馬光家庭日的主軸名稱為何？",
             "options": ["A. 光芒萬丈", "B. 沐光嶼航", "C. 成風破浪"],
             "ans": 1,
-            "exp": "今年主題為『沐光與航』，象徵大家如艦隊般齊心出航！"
+            "exp": "今年主題為『沐光嶼航』，象徵大家如艦隊般齊心出航！"
         },
         {
             "id": "FA02",
@@ -1537,7 +1537,7 @@ def render_header_banner():
     st.markdown("""
     <div class="ocean-banner">
         <div style="font-size: 0.95rem; letter-spacing: 1px; color: #bae6fd; font-weight:700;">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
-        <div class="banner-title">⛵ 沐光與航・群島搶位戰</div>
+        <div class="banner-title">⛵ 沐光嶼航・群島搶位戰</div>
         <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 室外草坪</div>
         <div class="banner-subtitle">《院所搶位戰，邀請院所夥伴來答題通關，搶下院所專屬寶位》</div>
     </div>
@@ -1600,7 +1600,7 @@ def render_island_grid_clean():
             <path d="M95 145 C160 138 240 150 330 142 C380 138 420 146 445 144 L445 159 L95 159 Z" fill="#0284c7" opacity="0.4"/>
             <path d="M95 125 C130 110 165 130 200 122 C235 115 270 128 305 120 C340 114 380 125 445 116 L445 159 L95 159 Z" fill="#86efac" opacity="0.45"/>
             <rect x="180" y="70" width="180" height="28" rx="14" fill="#ffffff" opacity="0.9" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
-            <text x="270" y="89" font-size="18" font-weight="900" fill="#0369a1" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="2">⛵ 沐光與航 ⛵</text>
+            <text x="270" y="89" font-size="18" font-weight="900" fill="#0369a1" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="2">⛵ 沐光嶼航 ⛵</text>
             <rect x="200" y="102" width="140" height="13" rx="6.5" fill="#fef08a"/>
             <text x="270" y="112" font-size="8.5" font-weight="900" fill="#854d0e" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="0.5">2026/11/01 (日) 馬光家庭日</text>
             <polygon points="50,195 95,164 445,164 490,195" fill="url(#stageTopPlatform)" stroke="#0284c7" stroke-width="1.5"/>
@@ -1988,6 +1988,6 @@ elif selected_nav == "⚙️ 管理員劃島控制":
                 label="📥 下載通關名單 CSV",
                 data=csv_data,
                 file_name=f"ma_kwang_completion_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/css",
+                mime="text/csv",
                 key="btn_download_csv"
             )
