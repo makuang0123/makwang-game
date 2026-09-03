@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (位置拉高・超大郵輪・不遮擋・無程式碼外露)
+# 0. 頁面配置與高對比 CSS (導覽放大・規則說明・管理員名單)
 # ==========================================
 st.set_page_config(
     page_title="沐光與航｜群島搶位大挑戰",
@@ -22,7 +22,7 @@ CUSTOM_CSS = """
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     }
     
-    /* 頂部海軍深藍 Banner：高對比陰影文字 */
+    /* 頂部海軍深藍 Banner */
     .ocean-banner {
         background: linear-gradient(135deg, #0369a1 0%, #075985 50%, #0c4a6e 100%);
         border-radius: 18px;
@@ -52,13 +52,52 @@ CUSTOM_CSS = """
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
-    /* 🚢 巨型豪華郵輪浮標 (位置拉高至 bottom: 155px，徹底避開下方按鈕) */
+    /* 📜 遊戲規則與獎勵說明區塊 */
+    .rules-card {
+        background: #ffffff;
+        border: 2.5px solid #0284c7;
+        border-radius: 16px;
+        padding: 18px 22px;
+        margin-bottom: 18px;
+        box-shadow: 0 6px 16px rgba(2, 132, 199, 0.15);
+    }
+    .rules-title {
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: #0369a1;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .rules-content {
+        font-size: 0.92rem;
+        color: #1e293b;
+        line-height: 1.6;
+        font-weight: 600;
+    }
+
+    /* 🎯 頂部導覽選單放大與「答題闖關入口」凸顯 */
+    div[data-testid="stHorizontalBlock"] div[data-baseweb="radio"] {
+        background: #ffffff !important;
+        border: 2.5px solid #0284c7 !important;
+        border-radius: 14px !important;
+        padding: 8px 16px !important;
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2) !important;
+    }
+    div[data-baseweb="radio"] label {
+        font-size: 1.25rem !important;
+        font-weight: 900 !important;
+        color: #0369a1 !important;
+    }
+    
+    /* 🚢 巨型豪華郵輪浮標 (純視覺動畫) */
     .floating-cruise-container {
         position: fixed !important;
-        right: 4px !important;
+        right: 6px !important;
         bottom: 155px !important;
-        width: 200px !important;
-        height: 145px !important;
+        width: 190px !important;
+        height: 135px !important;
         z-index: 999990 !important;
         pointer-events: none !important;
         animation: floatCruise 3s ease-in-out infinite alternate !important;
@@ -70,64 +109,39 @@ CUSTOM_CSS = """
         100% { transform: translateY(0px) rotate(-1.5deg); }
     }
 
-    /* 點擊感應層：透明按鈕完全覆蓋在巨型郵輪與大旗幟上 (同步拉高) */
+    /* 點擊感應按鈕層：精準覆蓋在郵輪上方 */
     .st-key-floating_cruise_btn {
         position: fixed !important;
-        right: 4px !important;
+        right: 6px !important;
         bottom: 155px !important;
-        width: 200px !important;
-        height: 145px !important;
+        width: 190px !important;
+        height: 135px !important;
         z-index: 999999 !important;
     }
     .st-key-floating_cruise_btn button {
-        width: 200px !important;
-        height: 145px !important;
+        width: 190px !important;
+        height: 135px !important;
         border-radius: 24px !important;
         background: transparent !important;
         border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
         cursor: pointer !important;
     }
-    .st-key-floating_cruise_btn button:hover, 
-    .st-key-floating_cruise_btn button:active, 
-    .st-key-floating_cruise_btn button:focus {
-        background: transparent !important;
-        border: none !important;
-        color: transparent !important;
-        box-shadow: none !important;
-    }
 
-    /* 輸入標題文字：加大至 1.18rem (~19px)，深黑色超清晰 */
+    /* 輸入標題與輸入框優化 */
     label[data-testid="stWidgetLabel"] p {
         font-size: 1.18rem !important;
         font-weight: 800 !important;
         color: #0f172a !important;
         margin-bottom: 8px !important;
-        letter-spacing: 0.5px !important;
     }
-    
-    /* 輸入框底色與邊框：純白實色底 + 深海軍藍邊框 + 陰影，立體顯眼 */
     div[data-baseweb="input"] {
         background-color: #ffffff !important;
         border: 2.5px solid #0284c7 !important;
         border-radius: 12px !important;
         box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18) !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-    div[data-baseweb="input"]:focus-within {
-        border-color: #ea580c !important;
-        box-shadow: 0 4px 16px rgba(234, 88, 12, 0.3) !important;
-    }
-    div[data-baseweb="input"] input {
-        background-color: #ffffff !important;
-        font-size: 1.15rem !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        padding: 12px 14px !important;
     }
 
-    /* 一排5個、共6排的群島海圖自適應 Grid (5 欄寬，30 座島嶼完美排列) */
+    /* 5x6 群島 Grid (30座島嶼) */
     .island-5x6-grid {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -140,7 +154,6 @@ CUSTOM_CSS = """
         border-radius: 8px;
         padding: 6px 2px;
         text-align: center;
-        box-sizing: border-box;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -161,7 +174,6 @@ CUSTOM_CSS = """
     .island-title {
         font-size: 0.72rem;
         font-weight: 800;
-        line-height: 1.15;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -175,11 +187,7 @@ CUSTOM_CSS = """
         border-radius: 4px;
         padding: 1px 3px;
         margin: 2px 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
         width: 92%;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
     .island-status-open {
         color: #0284c7;
@@ -196,7 +204,7 @@ CUSTOM_CSS = """
         color: #e0f2fe;
     }
 
-    /* 頂部即時廣播跑馬燈 */
+    /* 戰報跑馬燈與狀態盒 */
     .live-broadcast-ticker {
         background: #ffffff;
         border: 2px solid #0284c7;
@@ -222,7 +230,6 @@ CUSTOM_CSS = """
         color: #0f172a;
         font-size: 0.88rem;
     }
-
     .empty-state-box {
         background: #ffffff;
         border-radius: 14px;
@@ -286,7 +293,7 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ==========================================
-# 1. 876 位全體同仁原始資料庫 (無省略・無解碼・保證秒查)
+# 1. 876 位全體同仁原始資料庫
 # ==========================================
 ALL_EMPLOYEES = {
 "CEO00002":("管理處","0101","醫師"),
@@ -1371,7 +1378,7 @@ CLINIC_TARGETS = {
 }
 
 # ==========================================
-# 2. 全域持久化狀態 (一排5個・共6排・共30座群島)
+# 2. 全域持久化狀態 (30座島嶼與通關明細紀錄)
 # ==========================================
 @st.cache_resource
 def get_global_game_state():
@@ -1415,6 +1422,7 @@ def get_global_game_state():
         "clinics": clinics,
         "islands": islands,
         "completed_employees": set(),
+        "completion_records": [],  # 記錄詳細通關名單 [{emp_id, clinic_name, title, time}]
         "latest_news": "⛵ 全院艦隊整裝待發中！搶位戰即刻開打！"
     }
 
@@ -1448,11 +1456,18 @@ def get_ranked_active_stats():
     unqualified = sorted([s for s in active_stats if not s["is_qualified"]], key=lambda x: x["rate"], reverse=True)
     return qualified + unqualified
 
-def record_user_completion(employee_id, clinic_name):
+def record_user_completion(employee_id, clinic_name, title_name):
     if employee_id in GLOBAL_STATE["completed_employees"]:
         return False, "您先前已經通關，戰力已計入！"
     
     GLOBAL_STATE["completed_employees"].add(employee_id)
+    GLOBAL_STATE["completion_records"].append({
+        "員工編號": employee_id,
+        "所屬單位": clinic_name,
+        "職稱": title_name,
+        "通關時間": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+
     if clinic_name in GLOBAL_STATE["clinics"]:
         clinic = GLOBAL_STATE["clinics"][clinic_name]
         clinic["completed_count"] += 1
@@ -1488,6 +1503,7 @@ def reset_user_session():
         "logged_in": False,
         "emp_id": "",
         "clinic_name": "",
+        "title_name": "",
         "progress": {"family_day": False, "ma_kwang": False, "policy": False},
         "current_q": None,
         "wrong_feedback": None,
@@ -1495,7 +1511,7 @@ def reset_user_session():
     }
 
 # ==========================================
-# 3. 視覺組件 (真實金屬舞台・海洋藍台面・一排5個共6排海圖)
+# 3. 視覺組件 (表頭、規則說明、海圖)
 # ==========================================
 def render_header_banner():
     st.markdown("""
@@ -1503,6 +1519,19 @@ def render_header_banner():
         <div style="font-size: 0.95rem; letter-spacing: 1px; color: #bae6fd; font-weight:700;">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
         <div class="banner-title">⛵ 沐光與航・群島搶位戰</div>
         <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 室外草坪</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_rules_section():
+    st.markdown("""
+    <div class="rules-card">
+        <div class="rules-title">📜 遊戲規則與獎勵說明</div>
+        <div class="rules-content">
+            <b>1. 身分驗證：</b>請輸入您的<b>員工編號</b>與<b>4碼生日密碼</b>（例：5月20日請輸入 0520）登入系統。<br>
+            <b>2. 三大關卡挑戰：</b>依序完成「沐光家庭日」、「馬光知識王」與「近期重點新政策」挑戰。<br>
+            <b>3. 戰力累積辦法：</b>每位同仁通關成功即可為所屬院所／單位增加 <b>1 點登島戰力</b>。<br>
+            <b>4. 優先選島獎勵：</b>當院所通關人數達到目標人數之 <b>60%（過半門檻）</b>時，即可取得優先選島資格，依達標時間先後順序於海圖上插旗佔領專屬黃金席位！
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -1548,47 +1577,14 @@ def render_island_grid_clean():
             <path d="M95 138 C140 128 200 145 260 135 C320 125 380 140 445 132 L445 159 L95 159 Z" fill="#38bdf8" opacity="0.6"/>
             <path d="M95 145 C160 138 240 150 330 142 C380 138 420 146 445 144 L445 159 L95 159 Z" fill="#0284c7" opacity="0.4"/>
             <path d="M95 125 C130 110 165 130 200 122 C235 115 270 128 305 120 C340 114 380 125 445 116 L445 159 L95 159 Z" fill="#86efac" opacity="0.45"/>
-            <path d="M112 144 L138 90 L138 144 Z" fill="#ffffff" stroke="#0284c7" stroke-width="1.2"/>
-            <path d="M141 102 L160 144 L141 144 Z" fill="#fde047" stroke="#ca8a04" stroke-width="1.2"/>
-            <path d="M106 144 C120 144 152 144 165 144 L158 152 C140 153 125 153 113 152 Z" fill="#0369a1"/>
-            <path d="M420 156 Q415 132 405 120" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M405 120 Q390 115 385 125 M405 120 Q410 108 422 110 M405 120 Q425 122 422 130" stroke="#15803d" stroke-width="2" stroke-linecap="round"/>
             <rect x="180" y="70" width="180" height="28" rx="14" fill="#ffffff" opacity="0.9" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.15))"/>
-            <text x="270" y="89" font-size="18" font-weight="900" fill="#0369a1" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="2">⛵ 沐光與航 ⛵</text>
+            <text x="270" y="89" font-size="18" font-weight="900" fill="#0369a1" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="2">⛵ 沐光與航 ⛵</text>
             <rect x="200" y="102" width="140" height="13" rx="6.5" fill="#fef08a"/>
-            <text x="270" y="112" font-size="8.5" font-weight="900" fill="#854d0e" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="0.5">2026/11/01 (日) 馬光家庭日</text>
-            <rect x="60" y="18" width="420" height="18" fill="none" stroke="url(#trussMetal)" stroke-width="2.5"/>
-            <line x1="60" y1="27" x2="480" y2="27" stroke="url(#trussMetal)" stroke-width="1.2"/>
-            <path d="M60 18 L70 36 L80 18 L90 36 L100 18 L110 36 L120 18 L130 36 L140 18 L150 36 L160 18 L170 36 L180 18 L190 36 L200 18 L210 36 L220 18 L230 36 L240 18 L250 36 L260 18 L270 36 L280 18 L290 36 L300 18 L310 36 L320 18 L330 36 L340 18 L350 36 L360 18 L370 36 L380 18 L390 36 L400 18 L410 36 L420 18 L430 36 L440 18 L450 36 L460 18 L470 36 L480 18" stroke="url(#trussMetal)" stroke-width="1.2"/>
-            <rect x="62" y="36" width="18" height="152" fill="none" stroke="url(#trussMetal)" stroke-width="2"/>
-            <line x1="71" y1="36" x2="71" y2="188" stroke="url(#trussMetal)" stroke-width="1"/>
-            <path d="M62 40 L80 55 L62 70 L80 85 L62 100 L80 115 L62 130 L80 145 L62 160 L80 175 L62 188" stroke="url(#trussMetal)" stroke-width="1.1"/>
-            <rect x="56" y="188" width="30" height="6" rx="2" fill="#475569"/>
-            <rect x="460" y="36" width="18" height="152" fill="none" stroke="url(#trussMetal)" stroke-width="2"/>
-            <line x1="469" y1="36" x2="469" y2="188" stroke="url(#trussMetal)" stroke-width="1"/>
-            <path d="M460 40 L478 55 L460 70 L478 85 L460 100 L478 115 L460 130 L478 145 L460 160 L478 175 L460 188" stroke="url(#trussMetal)" stroke-width="1.1"/>
-            <rect x="454" y="188" width="30" height="6" rx="2" fill="#475569"/>
-            <g fill="#0f172a" stroke="#334155" stroke-width="1">
-                <rect x="90" y="38" width="8" height="10" rx="1.5"/><circle cx="94" cy="49" r="3" fill="#fef08a"/>
-                <rect x="120" y="38" width="8" height="10" rx="1.5"/><circle cx="124" cy="49" r="3" fill="#fef08a"/>
-                <rect x="150" y="38" width="8" height="10" rx="1.5"/><circle cx="154" cy="49" r="3" fill="#fde047"/>
-                <rect x="180" y="38" width="8" height="10" rx="1.5"/><circle cx="184" cy="49" r="3" fill="#38bdf8"/>
-                <rect x="210" y="38" width="8" height="10" rx="1.5"/><circle cx="214" cy="49" r="3" fill="#fef08a"/>
-                <rect x="240" y="38" width="8" height="10" rx="1.5"/><circle cx="244" cy="49" r="3" fill="#38bdf8"/>
-                <rect x="270" y="38" width="8" height="10" rx="1.5"/><circle cx="274" cy="49" r="3" fill="#fef08a"/>
-                <rect x="300" y="38" width="8" height="10" rx="1.5"/><circle cx="304" cy="49" r="3" fill="#38bdf8"/>
-                <rect x="330" y="38" width="8" height="10" rx="1.5"/><circle cx="334" cy="49" r="3" fill="#fef08a"/>
-                <rect x="360" y="38" width="8" height="10" rx="1.5"/><circle cx="364" cy="49" r="3" fill="#fde047"/>
-                <rect x="390" y="38" width="8" height="10" rx="1.5"/><circle cx="394" cy="49" r="3" fill="#fef08a"/>
-                <rect x="420" y="38" width="8" height="10" rx="1.5"/><circle cx="424" cy="49" r="3" fill="#fef08a"/>
-            </g>
+            <text x="270" y="112" font-size="8.5" font-weight="900" fill="#854d0e" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="0.5">2026/11/01 (日) 馬光家庭日</text>
             <polygon points="50,195 95,164 445,164 490,195" fill="url(#stageTopPlatform)" stroke="#0284c7" stroke-width="1.5"/>
             <rect x="50" y="195" width="440" height="36" fill="url(#stageOceanBase)" rx="2"/>
             <line x1="50" y1="195" x2="490" y2="195" stroke="#fde047" stroke-width="3"/>
             <line x1="50" y1="231" x2="490" y2="231" stroke="#0369a1" stroke-width="2"/>
-            <rect x="220" y="200" width="100" height="10" rx="1" fill="#0369a1" stroke="#38bdf8" stroke-width="1"/>
-            <rect x="210" y="210" width="120" height="10" rx="1" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/>
-            <rect x="200" y="220" width="140" height="11" rx="1" fill="#075985" stroke="#38bdf8" stroke-width="1"/>
         </svg>
         <div style="font-size: 1.25rem; font-weight: 900; color: #0369a1; letter-spacing: 2px; text-shadow: 0 1px 4px rgba(2,132,199,0.28); margin-top: 6px; margin-bottom: 8px;">
             🌊 ═══ 舞台與海景第一排 (STAGE FRONT) ═══ 🌊
@@ -1609,7 +1605,7 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊 (每 3 秒自動輪詢最新戰報與海圖)
+# 局域自動刷新區塊
 @st.fragment(run_every=3)
 def render_live_leaderboard_auto():
     st.markdown(f"""
@@ -1717,6 +1713,7 @@ def render_quiz_engine():
 
     # 1. 登入表單
     if not u["logged_in"]:
+        render_rules_section()
         st.markdown("### ⛵ 登船啟航認證")
         
         emp_id_raw = st.text_input("1. 請輸入員工編號 (例: MK12345)", key="login_emp_input")
@@ -1749,6 +1746,7 @@ def render_quiz_engine():
                 u["logged_in"] = True
                 u["emp_id"] = emp_id_input
                 u["clinic_name"] = detected_clinic
+                u["title_name"] = matched_info["title"]
                 st.rerun()
         return
 
@@ -1781,7 +1779,7 @@ def render_quiz_engine():
             st.rerun()
         return
 
-    # 三大關卡進度條 (更新為 馬光知識王)
+    # 三大關卡進度條
     p_col1, p_col2, p_col3 = st.columns(3)
     p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
     p_col2.metric("② 馬光知識王", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
@@ -1839,7 +1837,7 @@ def render_quiz_engine():
                 u["current_q"] = None
                 
                 if all(u["progress"].values()):
-                    success, msg = record_user_completion(u["emp_id"], u["clinic_name"])
+                    success, msg = record_user_completion(u["emp_id"], u["clinic_name"], u["title_name"])
                     st.balloons()
                 st.rerun()
             else:
@@ -1856,58 +1854,43 @@ def render_quiz_engine():
 render_header_banner()
 
 if "nav_tab" not in st.session_state:
-    st.session_state.nav_tab = "🔥 戰況看板 & 群島海圖"
+    st.session_state.nav_tab = "🎯 答題闖關入口"
 
-# 右側隨身跟隨滑動的「巨型郵輪＋超大面長型飄揚旗幟寫【點我闖關】(21號大字)」懸浮浮標
+# 右側懸浮郵輪浮標
 if st.session_state.nav_tab != "🎯 答題闖關入口":
     st.markdown(
         '<div class="floating-cruise-container">'
-        '<svg width="200" height="145" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">'
-        '<path d="M8 140C28 134 50 146 72 140C94 134 116 146 138 140C160 134 182 146 212 140" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>'
-        '<path d="M14 149C38 144 62 154 86 149C110 144 134 154 158 149C180 144 200 151 208 149" stroke="#0284c7" stroke-width="5" stroke-linecap="round"/>'
+        '<svg width="190" height="135" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">'
         '<path d="M22 108L42 136C42 136 100 142 174 136L202 108H22Z" fill="#0f172a" stroke="#0369a1" stroke-width="2.5"/>'
         '<path d="M24 108H200L194 114H31L24 108Z" fill="#ef4444"/>'
         '<path d="M28 84H192L198 108H24L28 84Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="2.5"/>'
-        '<circle cx="45" cy="96" r="4" fill="#0284c7"/><circle cx="63" cy="96" r="4" fill="#0284c7"/><circle cx="81" cy="96" r="4" fill="#0284c7"/>'
-        '<circle cx="99" cy="96" r="4" fill="#0284c7"/><circle cx="117" cy="96" r="4" fill="#0284c7"/><circle cx="135" cy="96" r="4" fill="#0284c7"/>'
-        '<circle cx="153" cy="96" r="4" fill="#0284c7"/><circle cx="171" cy="96" r="4" fill="#0284c7"/><circle cx="189" cy="96" r="4" fill="#0284c7"/>'
         '<rect x="46" y="62" width="130" height="22" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>'
-        '<rect x="54" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/><rect x="71" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
-        '<rect x="88" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/><rect x="105" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
-        '<rect x="122" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/><rect x="139" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
-        '<rect x="156" y="67" width="10" height="11" rx="1.5" fill="#38bdf8"/>'
-        '<rect x="66" y="44" width="84" height="18" rx="3" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>'
-        '<rect x="76" y="48" width="13" height="9" rx="1" fill="#0284c7"/><rect x="96" y="48" width="13" height="9" rx="1" fill="#0284c7"/><rect x="116" y="48" width="13" height="9" rx="1" fill="#0284c7"/>'
-        '<path d="M78 28L80 44H90L88 28H78Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/><rect x="78" y="28" width="11" height="4" fill="#0f172a"/>'
-        '<path d="M112 28L114 44H124L122 28H112Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/><rect x="112" y="28" width="11" height="4" fill="#0f172a"/>'
-        '<line x1="32" y1="4" x2="32" y2="70" stroke="#b45309" stroke-width="4.5" stroke-linecap="round"/><circle cx="32" cy="5" r="4" fill="#fef08a"/>'
         '<path d="M34 6 C80 1 120 14 170 8 C195 5 210 10 214 12 C206 24 214 36 210 48 C160 42 120 54 80 48 C55 52 40 48 34 50 Z" fill="#dc2626" stroke="#fef08a" stroke-width="3"/>'
-        '<text x="120" y="34" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" letter-spacing="3">點我闖關</text>'
+        '<text x="120" y="34" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle" font-family="-apple-system, sans-serif" letter-spacing="3">點我闖關</text>'
         '</svg>'
         '</div>',
         unsafe_allow_html=True
     )
-    
-    # 點擊感應層：覆蓋於巨型郵輪與大面旗幟上方，點擊瞬間直達闖關頁
     if st.button(" ", key="floating_cruise_btn"):
         st.session_state.nav_tab = "🎯 答題闖關入口"
         st.rerun()
 
+nav_options = ["🎯 答題闖關入口", "🔥 戰況看板 & 群島海圖", "⚙️ 管理員劃島控制"]
 selected_nav = st.radio(
     "導覽選單",
-    options=["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"],
-    index=["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"].index(st.session_state.nav_tab),
+    options=nav_options,
+    index=nav_options.index(st.session_state.nav_tab) if st.session_state.nav_tab in nav_options else 0,
     horizontal=True,
     label_visibility="collapsed"
 )
 st.session_state.nav_tab = selected_nav
 
-if selected_nav == "🔥 戰況看板 & 群島海圖":
-    render_live_leaderboard_auto()
+st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
-elif selected_nav == "🎯 答題闖關入口":
+if selected_nav == "🎯 答題闖關入口":
     render_quiz_engine()
-
+elif selected_nav == "🔥 戰況看板 & 群島海圖":
+    render_live_leaderboard_auto()
 elif selected_nav == "⚙️ 管理員劃島控制":
     st.subheader("🛠️ 院所搶島與活動後台控制")
     qualified_clinics = [c for c in GLOBAL_STATE["clinics"].values() if c["completed_count"] >= math.ceil(c["target"] * 0.6)]
@@ -1932,3 +1915,21 @@ elif selected_nav == "⚙️ 管理員劃島控制":
                     st.rerun()
                 else:
                     st.error(msg)
+                    
+    st.markdown("---")
+    st.subheader("📋 闖關完成名單查詢與下載")
+    records = GLOBAL_STATE["completion_records"]
+    if not records:
+        st.info("目前尚無同仁完成通關。")
+    else:
+        df_records = pd.DataFrame(records)
+        st.dataframe(df_records, use_container_width=True)
+        
+        csv_data = df_records.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            label="📥 下載通關名單 CSV",
+            data=csv_data,
+            file_name=f"ma_kwang_completion_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            key="btn_download_csv"
+        )
