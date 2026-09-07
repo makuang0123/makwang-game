@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (紅框選項設為20px)
+# 0. 頁面配置與高對比 CSS (Banner文字調整・選單改橘底)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -28,19 +28,22 @@ CUSTOM_CSS = """
         color: #1e293b;
     }
 
-    /* 頂部海軍深藍 Banner (維持白色文字) */
+    /* 頂部海軍深藍 Banner (維持部分白字與特定調整) */
     .ocean-banner {
         background: linear-gradient(135deg, #0369a1 0%, #075985 50%, #0c4a6e 100%);
         border-radius: 18px;
         padding: 20px 14px;
-        color: #ffffff !important;
         text-align: center;
         box-shadow: 0 10px 20px -3px rgba(3, 105, 161, 0.4);
         border: 2.5px solid #38bdf8;
         margin-bottom: 14px;
     }
-    .ocean-banner *, .ocean-banner p, .ocean-banner span, .ocean-banner div {
-        color: #ffffff !important;
+    /* 頂部 Banner 第一行改為 16號字 */
+    .banner-top-text {
+        font-size: 16px !important;
+        letter-spacing: 1px;
+        color: #bae6fd !important;
+        font-weight: 700;
     }
     .banner-title {
         font-size: 1.85rem;
@@ -50,14 +53,15 @@ CUSTOM_CSS = """
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         margin-bottom: 6px;
     }
+    /* 第二行日期地點改為放大並改為黑色字 */
     .banner-badge {
         background: #fef08a;
-        color: #854d0e !important;
+        color: #000000 !important;
         display: inline-block;
-        padding: 5px 14px;
+        padding: 6px 16px;
         border-radius: 20px;
         font-weight: 900;
-        font-size: 0.85rem;
+        font-size: 1.15rem !important;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         margin-bottom: 8px;
     }
@@ -95,18 +99,18 @@ CUSTOM_CSS = """
         font-weight: 600;
     }
 
-    /* 🎯 頂部橫向導覽選單 */
+    /* 🎯 頂部橫向導覽選單（改為橘色底） */
     div[data-testid="stHorizontalBlock"] div[data-baseweb="radio"] {
-        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
-        border: 2.5px solid #0284c7 !important;
+        background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%) !important;
+        border: 2.5px solid #f97316 !important;
         border-radius: 14px !important;
         padding: 10px 18px !important;
-        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2) !important;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.2) !important;
     }
     div[role="radiogroup"][aria-orientation="horizontal"] label p {
         font-size: 1.25rem !important;
         font-weight: 900 !important;
-        color: #0c4a6e !important;
+        color: #9a3412 !important;
     }
     
     /* 🌟 第二個選項（答題闖關入口）突顯 */
@@ -1562,9 +1566,9 @@ def reset_user_session():
 def render_header_banner():
     st.markdown("""
     <div class="ocean-banner">
-        <div style="font-size: 0.95rem; letter-spacing: 1px; color: #bae6fd; font-weight:700;">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
+        <div class="banner-top-text">🌊 2026 馬光醫療網・家庭日啟航競賽</div>
         <div class="banner-title">⛵ 沐光嶼航・群島搶位戰</div>
-        <div class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 室外草坪</div>
+        <div><span class="banner-badge">📍 2026/11/01 (日) 高雄展覽館南館 ✕ 室外草坪</span></div>
         <div class="banner-subtitle">《院所搶位戰，邀請院所夥伴來答題通關，搶下院所專屬寶位》</div>
     </div>
     """, unsafe_allow_html=True)
