@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (導覽放大・選項字體為 16px)
+# 0. 頁面配置與高對比 CSS (導覽放大・選項16px・5秒輪播重設)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -86,7 +86,7 @@ CUSTOM_CSS = """
         font-weight: 600;
     }
 
-    /* 🎯 頂部導覽選單放大、整體框線與字體加大 */
+    /* 🎯 頂部橫向導覽選單放大、整體框線與字體加大 */
     div[data-testid="stHorizontalBlock"] div[data-baseweb="radio"] {
         background: #ffffff !important;
         border: 2.5px solid #0284c7 !important;
@@ -94,14 +94,14 @@ CUSTOM_CSS = """
         padding: 10px 18px !important;
         box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2) !important;
     }
-    div[data-baseweb="radio"] label {
+    div[role="radiogroup"][aria-orientation="horizontal"] label p {
         font-size: 1.35rem !important;
         font-weight: 900 !important;
         color: #0369a1 !important;
     }
     
     /* 🌟 特別將第二個選項（答題闖關入口）加上鮮艷的橘紅色底色塊與白字突顯 */
-    div[data-baseweb="radio"] div:nth-child(2) {
+    div[role="radiogroup"][aria-orientation="horizontal"] div:nth-child(2) {
         background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important;
         padding: 4px 12px !important;
         border-radius: 10px !important;
@@ -109,7 +109,7 @@ CUSTOM_CSS = """
         margin-left: 6px;
         margin-right: 6px;
     }
-    div[data-baseweb="radio"] div:nth-child(2) label {
+    div[role="radiogroup"][aria-orientation="horizontal"] div:nth-child(2) label p {
         color: #ffffff !important;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
@@ -123,8 +123,9 @@ CUSTOM_CSS = """
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 闖關選項文字調整為 16px */
-    div[data-baseweb="radio"] label p, div[data-testid="stRadio"] label span {
+    /* 🔘 闖關選項文字嚴格調整為 16px */
+    div[role="radiogroup"][aria-orientation="vertical"] label p,
+    div[role="radiogroup"][aria-orientation="vertical"] label span {
         font-size: 16px !important;
         font-weight: 700 !important;
         color: #1e293b !important;
@@ -1363,7 +1364,7 @@ QUESTION_BANK = {
             "q": "依照內聯單【醫療網院所恢復院主管職務之通知及說明】，下列哪一項說明有誤?",
             "options": ["A. 未來將朝向「院長」、「團隊」、「管理處」三方合作", "B. 院長與主管合作管理之主要職責為\"解決同仁和患者的問題及提升營運績效\"", "C. 欲報名主管的夥伴除了原擔任院主管的同仁可自行填寫外，其他夥伴亦可請院長推薦"],
             "ans": 0,
-            "exp": "未來醫療網院所朝向三方合作：「院長」、「主管」、「管理處」；在馬光的核心價值、企業文化、制度系統之下，院所內部人事物由院長和院主管共同管理、管理處為監督及輔助角色"
+            "exp": "未來醫療網院所朝向三方合作：「院長」、「主管」、「管理處」;在馬光的核心價值、企業文化、制度系統之下，院所內部人事物由院長和院主管共同管理、管理處為監督及輔助角色"
         },
         {
             "id": "PO07",
@@ -1666,14 +1667,14 @@ def render_live_leaderboard_auto():
     else:
         st.caption("達標 60% 依時間優先排定選島順位；衝刺中單位依完成率排名。（每 5 秒自動輪播 5 間院所）")
         
-        if "leaderboard_page" not in st.session_state:
+        if st.session_state.get("need_reset_leaderboard", False) or "leaderboard_page" not in st.session_state:
             st.session_state.leaderboard_page = 0
-        
+            st.session_state.need_reset_leaderboard = False
+
         total_items = len(ranked_stats)
         page_size = 5
         max_pages = math.ceil(total_items / page_size) if total_items > 0 else 1
         
-        # 確保頁數初始化或切換安全
         current_page = st.session_state.leaderboard_page % max_pages
         
         start_idx = current_page * page_size
@@ -1708,7 +1709,6 @@ def render_live_leaderboard_auto():
         
         st.caption(f"目前顯示第 {current_page + 1} 頁 / 共 {max_pages} 頁（每 5 秒自動更新）")
         
-        # 5秒計時結束後自動推進到下一頁
         st.session_state.leaderboard_page = (current_page + 1) % max_pages
 
     st.markdown("---")
@@ -1768,7 +1768,6 @@ def render_quiz_engine():
 
     u = st.session_state.user
 
-    # 1. 登入表單
     if not u["logged_in"]:
         render_rules_section()
         st.markdown("### ⛵ 登船啟航認證")
@@ -1822,7 +1821,6 @@ def render_quiz_engine():
     
     all_done = all(u["progress"].values()) or (u["emp_id"] in GLOBAL_STATE["completed_employees"])
     
-    # 通關完成畫面
     if all_done:
         st.success(f"🎉 恭喜通關！您已為 **{c_info['name']}** 貢獻 1 份登島戰力！")
         if c_info["is_qualified"]:
@@ -1836,7 +1834,6 @@ def render_quiz_engine():
             st.rerun()
         return
 
-    # 三大關卡進度條
     p_col1, p_col2, p_col3 = st.columns(3)
     p_col1.metric("① 沐光家庭日", "✅ 通關" if u["progress"]["family_day"] else "⬜ 挑戰中")
     p_col2.metric("② 馬光知識王", "✅ 通關" if u["progress"]["ma_kwang"] else "⬜ 挑戰中")
@@ -1864,7 +1861,6 @@ def render_quiz_engine():
 
     q_data = u["current_q"]
 
-    # 題目文字放大 1.5 倍並使用自訂深藍紫色 #1e3a8a
     st.markdown(f'<div class="quiz-question-text">題目：{q_data["q"]}</div>', unsafe_allow_html=True)
     
     selected_option = st.radio(
@@ -1931,7 +1927,8 @@ if st.session_state.nav_tab != "🎯 答題闖關入口":
     )
     if st.button(" ", key="floating_cruise_btn"):
         st.session_state.nav_tab = "🎯 答題闖關入口"
-        st.session_state.leaderboard_page = 0  # 點擊浮標跳轉時也重置
+        st.session_state.leaderboard_page = 0
+        st.session_state.need_reset_leaderboard = True
         st.rerun()
 
 nav_options = ["🔥 戰況看板 & 群島海圖", "🎯 答題闖關入口", "⚙️ 管理員劃島控制"]
@@ -1943,12 +1940,12 @@ selected_nav = st.radio(
     label_visibility="collapsed"
 )
 
-# 每次切換導覽頁面時，若選到「🔥 戰況看板 & 群島海圖」，強制將頁碼歸零，確保每次返回都是從第一頁開始
 if selected_nav != st.session_state.nav_tab:
     if selected_nav == "🔥 戰況看板 & 群島海圖":
         st.session_state.leaderboard_page = 0
-
-st.session_state.nav_tab = selected_nav
+        st.session_state.need_reset_leaderboard = True
+    st.session_state.nav_tab = selected_nav
+    st.rerun()
 
 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
@@ -1959,7 +1956,6 @@ elif selected_nav == "🎯 答題闖關入口":
 elif selected_nav == "⚙️ 管理員劃島控制":
     st.subheader("🛠️ 院所搶島與活動後台控制")
     
-    # 共同管理員登入驗證機制（全面保護劃島控制與名單查詢下載）
     if "admin_logged_in" not in st.session_state:
         st.session_state.admin_logged_in = False
 
@@ -2001,7 +1997,7 @@ elif selected_nav == "⚙️ 管理員劃島控制":
                         st.rerun()
                     else:
                         st.error(msg)
-                        
+                    
         st.markdown("---")
         st.subheader("📋 闖關完成名單查詢與下載")
         records = GLOBAL_STATE["completion_records"]
