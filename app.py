@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (頂部白字、其餘深色、選單換色、選項14px)
+# 0. 頁面配置與高對比 CSS (紅框選項設為14px)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -23,7 +23,7 @@ CUSTOM_CSS = """
         color: #1e293b !important;
     }
     
-    /* 🌐 全局文字預設為深色，排除開頭 Banner 與按鈕等特殊元件 */
+    /* 🌐 全局文字預設為深色，排除開頭 Banner */
     p, span, label, div {
         color: #1e293b;
     }
@@ -95,7 +95,7 @@ CUSTOM_CSS = """
         font-weight: 600;
     }
 
-    /* 🎯 頂部橫向導覽選單（自訂底色與文字顏色） */
+    /* 🎯 頂部橫向導覽選單 */
     div[data-testid="stHorizontalBlock"] div[data-baseweb="radio"] {
         background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
         border: 2.5px solid #0284c7 !important;
@@ -109,7 +109,7 @@ CUSTOM_CSS = """
         color: #0c4a6e !important;
     }
     
-    /* 🌟 特別將第二個選項（答題闖關入口）加上鮮艷的橘紅色底色塊與白字突顯 */
+    /* 🌟 第二個選項（答題闖關入口）突顯 */
     div[role="radiogroup"][aria-orientation="horizontal"] div:nth-child(2) {
         background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important;
         padding: 4px 12px !important;
@@ -123,7 +123,7 @@ CUSTOM_CSS = """
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    /* 🧠 闖關題目文字放大且顏色改為醒目的深藍紫色 (#1e3a8a) */
+    /* 🧠 闖關題目文字 */
     .quiz-question-text {
         font-size: 1.72rem !important;
         font-weight: 900 !important;
@@ -132,7 +132,7 @@ CUSTOM_CSS = """
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 闖關選項 ABC 文字嚴格調整為 14px */
+    /* 🔘 紅框內的闖關選項文字嚴格設定為 14px */
     div[role="radiogroup"][aria-orientation="vertical"] label p,
     div[role="radiogroup"][aria-orientation="vertical"] label span {
         font-size: 14px !important;
