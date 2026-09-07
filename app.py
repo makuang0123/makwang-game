@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (紅框選項設為14px)
+# 0. 頁面配置與高對比 CSS (紅框選項設為20px)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -132,10 +132,10 @@ CUSTOM_CSS = """
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 紅框內的闖關選項文字嚴格設定為 14px */
+    /* 🔘 紅框內的闖關選項文字嚴格設定為 20px */
     div[role="radiogroup"][aria-orientation="vertical"] label p,
     div[role="radiogroup"][aria-orientation="vertical"] label span {
-        font-size: 14px !important;
+        font-size: 20px !important;
         font-weight: 700 !important;
         color: #1e293b !important;
     }
