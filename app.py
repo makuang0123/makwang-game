@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (導覽放大・選項16px・5秒輪播重設)
+# 0. 頁面配置與高對比 CSS (頂部白字、其餘深色、選單換色、選項14px)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -20,18 +20,27 @@ CUSTOM_CSS = """
     .stApp { 
         background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%); 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        color: #1e293b !important;
     }
     
-    /* 頂部海軍深藍 Banner */
+    /* 🌐 全局文字預設為深色，排除開頭 Banner 與按鈕等特殊元件 */
+    p, span, label, div {
+        color: #1e293b;
+    }
+
+    /* 頂部海軍深藍 Banner (維持白色文字) */
     .ocean-banner {
         background: linear-gradient(135deg, #0369a1 0%, #075985 50%, #0c4a6e 100%);
         border-radius: 18px;
         padding: 20px 14px;
-        color: #ffffff;
+        color: #ffffff !important;
         text-align: center;
         box-shadow: 0 10px 20px -3px rgba(3, 105, 161, 0.4);
         border: 2.5px solid #38bdf8;
         margin-bottom: 14px;
+    }
+    .ocean-banner *, .ocean-banner p, .ocean-banner span, .ocean-banner div {
+        color: #ffffff !important;
     }
     .banner-title {
         font-size: 1.85rem;
@@ -55,7 +64,7 @@ CUSTOM_CSS = """
     .banner-subtitle {
         font-size: 1.05rem;
         font-weight: 800;
-        color: #e0f2fe;
+        color: #e0f2fe !important;
         letter-spacing: 0.5px;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         margin-top: 4px;
@@ -81,23 +90,23 @@ CUSTOM_CSS = """
     }
     .rules-content {
         font-size: 0.92rem;
-        color: #1e293b;
+        color: #1e293b !important;
         line-height: 1.6;
         font-weight: 600;
     }
 
-    /* 🎯 頂部橫向導覽選單放大、整體框線與字體加大 */
+    /* 🎯 頂部橫向導覽選單（自訂底色與文字顏色） */
     div[data-testid="stHorizontalBlock"] div[data-baseweb="radio"] {
-        background: #ffffff !important;
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%) !important;
         border: 2.5px solid #0284c7 !important;
         border-radius: 14px !important;
         padding: 10px 18px !important;
         box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2) !important;
     }
     div[role="radiogroup"][aria-orientation="horizontal"] label p {
-        font-size: 1.35rem !important;
+        font-size: 1.25rem !important;
         font-weight: 900 !important;
-        color: #0369a1 !important;
+        color: #0c4a6e !important;
     }
     
     /* 🌟 特別將第二個選項（答題闖關入口）加上鮮艷的橘紅色底色塊與白字突顯 */
@@ -123,10 +132,10 @@ CUSTOM_CSS = """
         margin-bottom: 14px !important;
     }
 
-    /* 🔘 闖關選項文字嚴格調整為 16px */
+    /* 🔘 闖關選項 ABC 文字嚴格調整為 14px */
     div[role="radiogroup"][aria-orientation="vertical"] label p,
     div[role="radiogroup"][aria-orientation="vertical"] label span {
-        font-size: 16px !important;
+        font-size: 14px !important;
         font-weight: 700 !important;
         color: #1e293b !important;
     }
@@ -1644,7 +1653,6 @@ def render_island_grid_clean():
     grid_html = f'<div class="island-5x6-grid">{"".join(cards)}</div><div style="font-size:0.72rem; color:#475569; margin-top:2px; margin-bottom:8px;">⚪ 白底虛線：開放登陸的島嶼 ｜ 🔵 藍底黃標：已被其他院所插旗鎖定</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-# 局域自動刷新區塊 (每 5 秒自動輪播排行榜 5 筆)
 @st.fragment(run_every=5)
 def render_live_leaderboard_auto():
     st.markdown(f"""
