@@ -6,7 +6,7 @@ import random
 import os
 
 # ==========================================
-# 0. 頁面配置與高對比 CSS (Banner文字調整・選單改橘底)
+# 0. 頁面配置與高對比 CSS (Banner第一行18號字・選單改橘底白字)
 # ==========================================
 st.set_page_config(
     page_title="沐光嶼航｜群島搶位大挑戰",
@@ -38,9 +38,9 @@ CUSTOM_CSS = """
         border: 2.5px solid #38bdf8;
         margin-bottom: 14px;
     }
-    /* 頂部 Banner 第一行改為 16號字 */
+    /* 頂部 Banner 第一行改為 18號字 */
     .banner-top-text {
-        font-size: 16px !important;
+        font-size: 18px !important;
         letter-spacing: 1px;
         color: #bae6fd !important;
         font-weight: 700;
@@ -53,7 +53,7 @@ CUSTOM_CSS = """
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         margin-bottom: 6px;
     }
-    /* 第二行日期地點改為放大並改為黑色字 */
+    /* 第二行日期地點維持放大並改為黑色字 */
     .banner-badge {
         background: #fef08a;
         color: #000000 !important;
@@ -99,32 +99,33 @@ CUSTOM_CSS = """
         font-weight: 600;
     }
 
-    /* 🎯 頂部橫向導覽選單（改為橘色底） */
+    /* 🎯 頂部橫向導覽選單（橘色底、文字改為白色） */
     div[data-testid="stHorizontalBlock"] div[data-baseweb="radio"] {
-        background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%) !important;
-        border: 2.5px solid #f97316 !important;
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+        border: 2.5px solid #c2410c !important;
         border-radius: 14px !important;
         padding: 10px 18px !important;
-        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.2) !important;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3) !important;
     }
     div[role="radiogroup"][aria-orientation="horizontal"] label p {
         font-size: 1.25rem !important;
         font-weight: 900 !important;
-        color: #9a3412 !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
     
     /* 🌟 第二個選項（答題闖關入口）突顯 */
     div[role="radiogroup"][aria-orientation="horizontal"] div:nth-child(2) {
-        background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%) !important;
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
         padding: 4px 12px !important;
         border-radius: 10px !important;
-        box-shadow: 0 4px 10px rgba(234, 88, 12, 0.35) !important;
+        box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
         margin-left: 6px;
         margin-right: 6px;
     }
     div[role="radiogroup"][aria-orientation="horizontal"] div:nth-child(2) label p {
         color: #ffffff !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
 
     /* 🧠 闖關題目文字 */
